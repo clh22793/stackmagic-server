@@ -51,6 +51,7 @@ var stackmagic = {
 			var x_api_key = content.request.headers['x-api-key'];
 
 			var cursor =state.db.collection('versions').find({"id":content.version_id, "client_id":x_api_key, "active":true}).toArray(function(err, docs){
+				console.log(err);
 				content.versions = docs;
 				content.client_id = x_api_key;
 				resolve(content);
@@ -61,6 +62,7 @@ var stackmagic = {
 	'insert_api_object': function(content){
 		return new Promise(function(resolve) {
 			var cursor = state.db.collection('api_objects').insertOne(content.api_object, function(err, result){
+				console.log(err);
 				content.insert_result = result;
 				resolve(content);
 			});
@@ -70,6 +72,7 @@ var stackmagic = {
 	'get_user_by_api': function(content){
 		return new Promise(function(resolve) {
 			var cursor =state.db.collection('api_objects').find({"body.username": content.request.body.username, "api_id": content.api_id, "active": true}).toArray(function(err, docs){
+				console.log(err);
 				content.api_object_users = docs;
 				resolve(content);
 			});
@@ -79,6 +82,7 @@ var stackmagic = {
 	'authenticate_user': function(content){
 		return new Promise(function(resolve) {
 			var cursor =state.db.collection('api_objects').find({"body.username": content.username, "body.password": content.password, "active": true}).toArray(function(err, docs){
+				console.log(err);
 				content.authenticate_users = docs;
 				resolve(content);
 			});
@@ -88,6 +92,17 @@ var stackmagic = {
 	'retrieve_api_objects': function(content){
 		return new Promise(function(resolve) {
 			var cursor =state.db.collection('api_objects').find({"type":content.type, "version_id":content.version_id, "user_id":content.user_id, "active": true}).toArray(function(err, docs){
+				console.log(err);
+				content.retrieved_api_objects = docs;
+				resolve(content);
+			});
+		});
+	},
+
+	'retrieve_api_objects_by_id': function(content){
+		return new Promise(function(resolve) {
+			var cursor =state.db.collection('api_objects').find({"body._id":content.resource_id, "version_id":content.version_id, "user_id":content.user_id, "active": true}).toArray(function(err, docs){
+				console.log(err);
 				content.retrieved_api_objects = docs;
 				resolve(content);
 			});
@@ -100,6 +115,7 @@ var stackmagic = {
 			var token = authorization_parts[1];
 
 			var cursor =state.db.collection('api_oauth_tokens').find({"body.access_token": token, "active": true}).toArray(function(err, docs){
+				console.log(err);
 				content.authenticated_tokens = docs;
 				content.client_id = docs[0].client_id;
 				content.user_id = docs[0].user_id;
@@ -122,6 +138,7 @@ var stackmagic = {
 			object.body.access_token = util.generate_oauth_token();
 
 			var cursor = state.db.collection('api_oauth_tokens').insertOne(object, function(err, result){
+				console.log(err);
 				content.object = object;
 				resolve(content);
 			});
@@ -454,9 +471,6 @@ app.get('/api/:api_id/:version_id/:resource', function (request, response) {
 
 		})
 		.then(function(content){
-			console.log('specking');
-			//console.log(content.spec);
-
 			return new Promise(function(resolve) {
 				if(!content.spec.paths['/'+content.resource]){
 					throw new ObjectException("invalid resource");
@@ -477,6 +491,65 @@ app.get('/api/:api_id/:version_id/:resource', function (request, response) {
 				var payload = [];
 				for(var i=0; i < content.retrieved_api_objects.length; i++){
 					payload.push(content.retrieved_api_objects[i].body);
+				}
+
+				response.send(payload);
+			});
+
+			console.log(content.retrieved_api_objects);
+		})
+		.catch(function(err){
+			console.trace();
+			console.log(err);
+			response.send({"error_code":err.code, "error_message":err.message});
+		});
+});
+
+app.get('/api/:api_id/:version_id/:resource/:resource_id', function (request, response) {
+	var content = init_content(request);
+	content.resource_id = request.params.resource_id;
+
+	request_authentication(content)
+		.then(stackmagic.get_swagger)
+		.then(function(content){
+			return new Promise(function(resolve) {
+				// validate swagger
+
+				if(!content.swagger || content.swagger.length == 0){
+					throw new HeaderException('no available definition for version: '+content.version_id);
+				}else{
+					content.swagger = content.swagger[0];
+					console.log(content);
+					content.spec = JSON.parse(content.swagger.content);
+					resolve(content);
+				}
+			});
+
+		})
+		.then(function(content){
+			return new Promise(function(resolve) {
+				if(!content.spec.paths['/'+content.resource]){
+					throw new ObjectException("invalid resource");
+				}
+
+				if(!content.spec.paths['/'+content.resource][content.request.method.toLowerCase()]){
+					throw new ObjectException("method not allowed");
+				}
+
+				console.log(content);
+				content.type = content.spec.paths['/'+content.resource]['x-singular'];
+				resolve(content);
+			});
+		})
+		.then(stackmagic.retrieve_api_objects_by_id)
+		.then(function(content){
+			return new Promise(function(resolve) {
+				var payload = {};
+
+				if(content.retrieved_api_objects.length > 0){
+					payload = content.retrieved_api_objects[0].body;
+				}else{
+					throw new ObjectException("unique resource does not exist");
 				}
 
 				response.send(payload);
