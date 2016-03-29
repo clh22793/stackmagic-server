@@ -216,7 +216,6 @@ var stackmagic = {
 			content.api_object = {"body":body, "type":schema_parts[1], "api_id":content.api_id, "version_id":content.version_id,
 								  "client_id":content.client_id, "active":true};
 
-
 			if(content.user_id){
 				content.api_object.user_id = content.user_id;
 			}
@@ -351,7 +350,7 @@ app.post('/api/:api_id/:version_id/users', function (request, response) {
 			});
 		})
 		.then(function(content){
-			response.send(content.api_object);
+			response.send(content.api_object.body);
 		})
 		.catch(function(err){
 			console.trace();
@@ -430,10 +429,14 @@ app.post('/api/:api_id/:version_id/:resource', function (request, response) {
 
 		})
 		.then(stackmagic.build_api_object)
+		.then(stackmagic.insert_api_object)
 		.then(function(content){
-			console.log('api object built')
-			console.log(content);
-			response.send('ok');
+			return new Promise(function(resolve) {
+				resolve(content);
+			});
+		})
+		.then(function(content){
+			response.send(content.api_object);
 		})
 		.catch(function(err){
 			console.trace();
