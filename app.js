@@ -6,14 +6,13 @@ var bodyParser = require('body-parser');
 var crypto = require('crypto');
 var uuid = require('node-uuid');
 
-
 var app = express();
 
-// parse application/x-www-form-urlencoded 
-//app.use(bodyParser.urlencoded({ extended: false }));
- 
 // parse application/json 
 app.use(bodyParser.json());
+
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }));
 
 var state = {
   db: null
@@ -33,6 +32,17 @@ var HeaderException = function(message, code){
 var ObjectException = function(message, code){
 	this.message = message;
 	this.code = (code) ? code : 1001;
+};
+
+var util = {
+	'encrypt_password': function(password){
+		return crypto.createHash('sha1').update(password).digest("hex");
+	},
+
+	'generate_oauth_token': function(){
+		var created = new Date().toISOString();
+		return crypto.createHash('sha1').update(created+uuid.v4()).digest("hex");
+	}
 };
 
 var stackmagic = {
@@ -61,6 +71,49 @@ var stackmagic = {
 		return new Promise(function(resolve) {
 			var cursor =state.db.collection('api_objects').find({"body.username": content.request.body.username, "api_id": content.api_id, "active": true}).toArray(function(err, docs){
 				content.api_object_users = docs;
+				resolve(content);
+			});
+		});
+	},
+
+	'authenticate_user': function(content){
+		return new Promise(function(resolve) {
+			var cursor =state.db.collection('api_objects').find({"body.username": content.username, "body.password": content.password, "active": true}).toArray(function(err, docs){
+				content.authenticate_users = docs;
+				resolve(content);
+			});
+		});
+	},
+
+	'authenticate_token': function(content){
+		return new Promise(function(resolve) {
+			var authorization_parts = content.headers.authorization.split(' ');
+			var token = authorization_parts[1];
+
+			var cursor =state.db.collection('api_oauth_tokens').find({"body.access_token": token, "active": true}).toArray(function(err, docs){
+				content.authenticated_tokens = docs;
+				content.client_id = docs[0].client_id;
+				content.user_id = docs[0].user_id;
+				resolve(content);
+			});
+
+		});
+	},
+
+	'save_oauth_token': function(content){
+		return new Promise(function(resolve) {
+			var object = {};
+			object.api_id = content.authenticate_users[0].api_id;
+			object.version_id = content.authenticate_users[0].version_id;
+			object.user_id = content.authenticate_users[0].body._id;
+			object.client_id = content.authenticate_users[0].client_id;
+			object.active = true;
+			object.body = {};
+			object.body._created = new Date().toISOString();
+			object.body.access_token = util.generate_oauth_token();
+
+			var cursor = state.db.collection('api_oauth_tokens').insertOne(object, function(err, result){
+				content.object = object;
 				resolve(content);
 			});
 		});
@@ -112,11 +165,12 @@ var stackmagic = {
 			//var spec = content.swagger;
 			var request = content.request;
 
-			var parameters = spec.paths['/users'][request.method.toLowerCase()].parameters[0];
+			//var parameters = spec.paths['/users'][request.method.toLowerCase()].parameters[0];
+			var parameters = spec.paths['/'+content.resource][request.method.toLowerCase()].parameters[0];
 			var definitions = spec.definitions;
 
 			// check for valid method
-			if(!spec.paths['/users'][request.method.toLowerCase()]){
+			if(!spec.paths['/'+content.resource][request.method.toLowerCase()]){
 				console.log('method NOT ALLOWED');
 				return 'method not allowed';
 			}
@@ -137,7 +191,8 @@ var stackmagic = {
 						continue;
 					}else if(request.body[key]){
 						if(schema_parts[1] == 'User' && key.toLowerCase() == 'password'){
-							body[key] = crypto.createHash('sha1').update(request.body[key]+request.body['username']).digest("hex")
+							//body[key] = crypto.createHash('sha1').update(request.body[key]+request.body['username']).digest("hex")
+							body[key] = util.encrypt_password(request.body[key]);
 						}else{
 							body[key] = request.body[key];
 						}
@@ -160,6 +215,11 @@ var stackmagic = {
 
 			content.api_object = {"body":body, "type":schema_parts[1], "api_id":content.api_id, "version_id":content.version_id,
 								  "client_id":content.client_id, "active":true};
+
+
+			if(content.user_id){
+				content.api_object.user_id = content.user_id;
+			}
 			resolve(content);
 		});
 	}
@@ -171,10 +231,6 @@ MongoClient.connect('mongodb://devtest:devtest@aws-us-east-1-portal.14.dblayer.c
   }else{
     state.db = db;
   }
-});
-
-app.get('/', function (req, res) {
-  res.send('Hello World!');
 });
 
 var get_path_details_from_spec = function(spec, request){
@@ -236,6 +292,9 @@ var validate_swagger = function(){
   	});
 };
 
+app.get('/', function (req, res) {
+  res.send('Hello World!');
+});
 
 app.post('/api/:api_id/:version_id/users', function (request, response) {
   var api_id = request.params.api_id;
@@ -245,6 +304,7 @@ app.post('/api/:api_id/:version_id/users', function (request, response) {
 	content.api_id = api_id;
 	content.version_id = version_id;
 	content.request = request;
+	content.resource = 'users';
 
 	stackmagic.get_swagger(content)
 		.then(function(content){
@@ -299,6 +359,89 @@ app.post('/api/:api_id/:version_id/users', function (request, response) {
 			response.send({"error_code":err.code, "error_message":err.message});
 		});
 });
+
+app.post('/api/:api_id/:version_id/oauth/token', function (request, response) {
+	var username = request.body.username;
+	var password = request.body.password;
+
+	var content = {};
+	content.username = request.body.username;
+	content.password = util.encrypt_password(request.body.password);
+
+	stackmagic.authenticate_user(content)
+		.then(function(content){
+			return new Promise(function(resolve) {
+				// validate swagger
+
+				if(content.authenticate_users.length == 0){
+					throw new ObjectException('invalid credentials');
+				}else{
+					resolve(content);
+				}
+			});
+		})
+		.then(stackmagic.save_oauth_token)
+		.then(function(content){
+			response.send(content.object.body);
+		})
+		.catch(function(err){
+			console.trace();
+			console.log(err);
+			response.send({"error_code":err.code, "error_message":err.message});
+		});
+});
+
+app.post('/api/:api_id/:version_id/:resource', function (request, response) {
+	var content = {};
+	content.api_id = request.params.api_id;
+	content.version_id = request.params.version_id;
+	content.resource = request.params.resource;
+	content.headers = request.headers;
+
+	content.request = request;
+	//content.request.body = request.body;
+
+	stackmagic.authenticate_token(content)
+		.then(function(content){ // verify auth token
+			return new Promise(function(resolve) {
+				if(content.authenticated_tokens.length == 0){
+					throw new ObjectException('invalid oauth credentials');
+				}
+				//console.log(content);
+
+				resolve(content);
+			});
+		})
+		.then(stackmagic.get_swagger)
+		.then(function(content){
+			return new Promise(function(resolve) {
+				console.log('WAITING...');
+				// validate swagger
+
+				if(!content.swagger || content.swagger.length == 0){
+					throw new HeaderException('no available definition for version: '+content.version_id);
+				}else{
+					content.swagger = content.swagger[0];
+					console.log(content);
+					content.spec = JSON.parse(content.swagger.content);
+					resolve(content);
+				}
+			});
+
+		})
+		.then(stackmagic.build_api_object)
+		.then(function(content){
+			console.log('api object built')
+			console.log(content);
+			response.send('ok');
+		})
+		.catch(function(err){
+			console.trace();
+			console.log(err);
+			response.send({"error_code":err.code, "error_message":err.message});
+		});
+});
+
 
 app.listen(3000, function () {
   console.log('Example app listening on port 3000!');
