@@ -85,6 +85,15 @@ var stackmagic = {
 		});
 	},
 
+	'retrieve_api_objects': function(content){
+		return new Promise(function(resolve) {
+			var cursor =state.db.collection('api_objects').find({"type":content.type, "version_id":content.version_id, "user_id":content.user_id, "active": true}).toArray(function(err, docs){
+				content.retrieved_api_objects = docs;
+				resolve(content);
+			});
+		});
+	},
+
 	'authenticate_token': function(content){
 		return new Promise(function(resolve) {
 			var authorization_parts = content.headers.authorization.split(' ');
@@ -124,8 +133,6 @@ var stackmagic = {
 
 		return new Promise(function(resolve) {
 			var cursor =state.db.collection('swaggers').find({"api_id":content.api_id, "version_id":content.version_id, "active":true}).toArray(function(err, results){
-				//console.log('result');
-				//console.log(result);
 				console.log(err);
 				content.swagger = results;
 				resolve(content);
@@ -133,47 +140,21 @@ var stackmagic = {
 		});
 	},
 
-	/*'client_auth': function(content){
-		console.log('client_auth');
-		console.log(content);
-
-		return new Promise(function(resolve) {
-			console.log('client_auth from stackmagic');
-			console.log(content.request.headers);
-			var x_api_key = content.request.headers['x-api-key'];
-
-			var cursor =state.db.collection('versions').find({"id":content.version_id, "client_id":x_api_key, "active":true}).toArray()
-				.then(function(doc){
-					console.log('finding client...');
-					console.log(doc);
-
-					if(doc.length > 0){
-						content.client_id = doc[0].client_id;
-						resolve(content);
-					}else{
-						console.log('throw invalid api-key exception');
-						throw new HeaderException("invalid x-api-key");
-					}
-
-				});
-		});
-	},*/
-
 	'build_api_object': function(content){
 		return new Promise(function(resolve) {
 			var spec = content.spec;
-			//var spec = content.swagger;
 			var request = content.request;
 
-			//var parameters = spec.paths['/users'][request.method.toLowerCase()].parameters[0];
+			if(!spec.paths['/'+content.resource]){
+				throw new ObjectException("invalid resource");
+			}
+
+			if(!spec.paths['/'+content.resource][request.method.toLowerCase()]){
+				throw new ObjectException("method not allowed");
+			}
+
 			var parameters = spec.paths['/'+content.resource][request.method.toLowerCase()].parameters[0];
 			var definitions = spec.definitions;
-
-			// check for valid method
-			if(!spec.paths['/'+content.resource][request.method.toLowerCase()]){
-				console.log('method NOT ALLOWED');
-				return 'method not allowed';
-			}
 
 			// check for required body params
 			if(parameters.required == true && parameters.in == 'body'){
@@ -209,11 +190,11 @@ var stackmagic = {
 
 			if(request.method.toLowerCase() == 'post'){
 				body._created = new Date().toISOString();
-				body._type = schema_parts[1];
+				body._type = schema_parts[1].toLowerCase();
 				body._id = crypto.createHash('sha1').update(body._created+body._type+uuid.v4()).digest("hex");
 			}
 
-			content.api_object = {"body":body, "type":schema_parts[1], "api_id":content.api_id, "version_id":content.version_id,
+			content.api_object = {"body":body, "type":schema_parts[1].toLowerCase(), "api_id":content.api_id, "version_id":content.version_id,
 								  "client_id":content.client_id, "active":true};
 
 			if(content.user_id){
@@ -390,31 +371,37 @@ app.post('/api/:api_id/:version_id/oauth/token', function (request, response) {
 		});
 });
 
-app.post('/api/:api_id/:version_id/:resource', function (request, response) {
+var init_content = function(request){
 	var content = {};
 	content.api_id = request.params.api_id;
 	content.version_id = request.params.version_id;
 	content.resource = request.params.resource;
 	content.headers = request.headers;
-
 	content.request = request;
-	//content.request.body = request.body;
 
-	stackmagic.authenticate_token(content)
+	return content;
+};
+
+var request_authentication = function(content){
+	return stackmagic.authenticate_token(content)
 		.then(function(content){ // verify auth token
 			return new Promise(function(resolve) {
 				if(content.authenticated_tokens.length == 0){
 					throw new ObjectException('invalid oauth credentials');
 				}
-				//console.log(content);
 
 				resolve(content);
 			});
-		})
+		});
+};
+
+app.post('/api/:api_id/:version_id/:resource', function (request, response) {
+	var content = init_content(request);
+
+	request_authentication(content)
 		.then(stackmagic.get_swagger)
 		.then(function(content){
 			return new Promise(function(resolve) {
-				console.log('WAITING...');
 				// validate swagger
 
 				if(!content.swagger || content.swagger.length == 0){
@@ -437,6 +424,65 @@ app.post('/api/:api_id/:version_id/:resource', function (request, response) {
 		})
 		.then(function(content){
 			response.send(content.api_object);
+		})
+		.catch(function(err){
+			console.trace();
+			console.log(err);
+			response.send({"error_code":err.code, "error_message":err.message});
+		});
+});
+
+
+app.get('/api/:api_id/:version_id/:resource', function (request, response) {
+	var content = init_content(request);
+
+	request_authentication(content)
+		.then(stackmagic.get_swagger)
+		.then(function(content){
+			return new Promise(function(resolve) {
+				// validate swagger
+
+				if(!content.swagger || content.swagger.length == 0){
+					throw new HeaderException('no available definition for version: '+content.version_id);
+				}else{
+					content.swagger = content.swagger[0];
+					console.log(content);
+					content.spec = JSON.parse(content.swagger.content);
+					resolve(content);
+				}
+			});
+
+		})
+		.then(function(content){
+			console.log('specking');
+			//console.log(content.spec);
+
+			return new Promise(function(resolve) {
+				if(!content.spec.paths['/'+content.resource]){
+					throw new ObjectException("invalid resource");
+				}
+
+				if(!content.spec.paths['/'+content.resource][content.request.method.toLowerCase()]){
+					throw new ObjectException("method not allowed");
+				}
+
+				console.log(content);
+				content.type = content.spec.paths['/'+content.resource]['x-singular'];
+				resolve(content);
+			});
+		})
+		.then(stackmagic.retrieve_api_objects)
+		.then(function(content){
+			return new Promise(function(resolve) {
+				var payload = [];
+				for(var i=0; i < content.retrieved_api_objects.length; i++){
+					payload.push(content.retrieved_api_objects[i].body);
+				}
+
+				response.send(payload);
+			});
+
+			console.log(content.retrieved_api_objects);
 		})
 		.catch(function(err){
 			console.trace();
