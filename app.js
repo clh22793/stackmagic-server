@@ -61,28 +61,12 @@ var magicstack = {
 
 			var cursor =state.db.collection('api_keys').find({"basic_key":authorization_parts[1], "active":true}).toArray(function(err, docs){
 				console.log(err);
-				console.log('DOCS');
-				console.log(docs)
-				//content.versions = docs;
-				//content.client_id = docs[0].client_id;
-				//content.api_id = docs[0].api_id;
-				content.api_keys = docs;
 
+				content.api_keys = docs;
 				console.log(content);
 				resolve(content);
 			});
 		});
-
-		/*return new Promise(function(resolve) {
-			var x_api_key = content.request.headers['x-api-key'];
-
-			var cursor =state.db.collection('versions').find({"id":content.version_id, "client_id":x_api_key, "active":true}).toArray(function(err, docs){
-				console.log(err);
-				content.versions = docs;
-				content.client_id = x_api_key;
-				resolve(content);
-			});
-		});*/
 	},
 
 	'insert_api_object': function(content){
@@ -117,6 +101,7 @@ var magicstack = {
 		});
 	},
 
+	// IS THIS USED!?!?!?!?
 	'retrieve_api_objects': function(content){
 		return new Promise(function(resolve) {
 			var cursor =state.db.collection('api_objects').find({"type":content.type, "version_id":content.version_id, "user_id":content.user_id, "active": true}).toArray(function(err, docs){
@@ -127,6 +112,7 @@ var magicstack = {
 		});
 	},
 
+	// IS THIS USED!?!?!?!?!?
 	'retrieve_api_objects_by_id': function(content){
 		return new Promise(function(resolve) {
 			var cursor =state.db.collection('api_objects').find({"body._id":content.resource_id, "version_id":content.version_id, "user_id":content.user_id, "active": true}).toArray(function(err, docs){
@@ -201,6 +187,17 @@ var magicstack = {
 		});
 	},
 
+	'get_api_objects': function(content){
+		return new Promise(function(resolve) {
+			var cursor =state.db.collection('api_objects').find(content.query).toArray(function(err, results){
+				console.log(err);
+
+				content.results = results;
+				resolve(content);
+			});
+		});
+	},
+
 	'build_api_object': function(content){
 		return new Promise(function(resolve) {
 			console.log('BUILD API OBJECT');
@@ -260,7 +257,7 @@ var magicstack = {
 			}
 
 			content.api_object = {"body":body, "type":schema_parts[1].toLowerCase(), "api_id":content.api_id, "version_id":content.version_id,
-								  "client_id":content.client_id, "active":true};
+								  "client_id":content.client_id, "active":true, "resource":content.resource};
 
 			if(content.user_id){
 				content.api_object.user_id = content.user_id;
@@ -320,27 +317,7 @@ var get_swagger = function(api_id, version_name, request){
   	});
 };
 
-var get_deployment = function(obj, request){
-  	// get deployment object for this version
-
-	return new Promise(function(resolve) {
-		var cursor =state.db.collection('swaggers').find({"api_id":obj.api_id, "name":obj.version_name, "active":true}).toArray()
-			.then(function(doc){
-				var spec = JSON.parse(doc[0].content);
-				console.log(spec);
-				var spec_path = get_path_details_from_spec(spec, request);
-
-				// get the auth from swagger spec
-
-				var auth = get_auth_from_spec(spec_path, request);
-				console.log(auth);
-
-				//resolve({"auth":auth, "spec":spec, "request":request, "api_id":obj.api_id, "version_id":obj.version_id, "x-api-key":request.headers['x-api-key']});
-				resolve({"auth":auth, "spec":spec, "request":request, "api_id":obj.api_id, "version_name":obj.version_name, "x-api-key":request.headers['x-api-key']});
-			});
-  	});
-};
-
+// IS THIS USED!?!?!?!?!?
 var validate_swagger = function(){
 	return new Promise(function(resolve) {
 		var cursor =state.db.collection('swaggers').find({"api_id":api_id, "version_id":version_id, "active":true}).toArray()
@@ -360,16 +337,13 @@ var validate_swagger = function(){
 };
 
 app.get('/', function (req, res) {
-  res.send('Hello World!');
+  res.send('abra cadabra!');
 });
 
 app.post('/:version_name/users', function (request, response) {
-  //var api_id = request.params.api_id;
-  var version_name = request.params.version_name;
+  	var version_name = request.params.version_name;
 
 	var content = {};
-	//content.api_id = api_id;
-	//content.version_id = version_id;
 	content.version_name = version_name;
 	content.request = request;
 	content.resource = 'users';
@@ -378,7 +352,6 @@ app.post('/:version_name/users', function (request, response) {
 		.then(function(content){
 			return new Promise(function(resolve) {
 				// validate swagger
-				//content.swagger = results[0].swagger;
 
 				console.log(content.results);
 
@@ -386,7 +359,6 @@ app.post('/:version_name/users', function (request, response) {
 					throw new HeaderException('no available definition for version: '+content.version_name);
 				}else{
 
-					//content.swagger = content.swagger[0];
 					content.swagger = content.results[0].swagger;
 					content.version_id = content.results[0].version_id;
 					resolve(content);
@@ -403,7 +375,6 @@ app.post('/:version_name/users', function (request, response) {
 					content.spec = JSON.parse(content.swagger);
 					content.client_id = content.api_keys[0].client_id;
 					content.api_id = content.api_keys[0].api_id;
-					//content.version_id = content.api_keys[0].version_id;
 					resolve(content);
 				}
 			});
@@ -429,6 +400,99 @@ app.post('/:version_name/users', function (request, response) {
 		})
 		.then(function(content){
 			response.send(content.api_object.body);
+		})
+		.catch(function(err){
+			console.trace();
+			console.log(err);
+			response.send({"error_code":err.code, "error_message":err.message});
+		});
+});
+
+app.get('/:version_name/users', function (request, response) {
+  	var version_name = request.params.version_name;
+
+	var content = {};
+	content.version_name = version_name;
+	content.request = request;
+	content.resource = 'users';
+
+	magicstack.get_deployment(content)
+		.then(function(content){
+			return new Promise(function(resolve) {
+				// validate swagger
+
+				console.log(content.results);
+
+				if(content.results.length == 0){
+					throw new HeaderException('no available definition for version: '+content.version_name);
+				}else{
+
+					content.swagger = content.results[0].swagger;
+					content.version_id = content.results[0].version_id;
+					resolve(content);
+				}
+			});
+
+		})
+		.then(magicstack.validate_api_key)
+		.then(function(content){
+			return new Promise(function(resolve) {
+				if(!content.api_keys[0]){
+					throw new HeaderException('invalid authorization');
+				}else{
+					content.spec = JSON.parse(content.swagger);
+					content.client_id = content.api_keys[0].client_id;
+					content.api_id = content.api_keys[0].api_id;
+
+					content.query = {"version_id":content.version_id, "resource":content.resource, "active":true};
+
+					resolve(content);
+				}
+			});
+		})
+		.then(magicstack.get_api_objects)
+		.then(function(content){
+			return new Promise(function(resolve) {
+				console.log('RESULTS');
+				console.log(content.results);
+
+				if(content.results.length == 0){
+					throw new ObjectException('retrieval error');
+				}else{
+					var payload = [];
+					for(var i=0; i < content.results.length; i++){
+						payload.push(content.results[i].body);
+					};
+
+					content.payload = payload;
+					console.log(content.payload);
+
+					resolve(content);
+				}
+			});
+		})
+		/*.then(magicstack.get_user_by_api)
+		.then(function(content){
+			return new Promise(function(resolve) {
+				// err if user already exists
+
+				if(content.api_object_users.length > 0){
+					throw new ObjectException('user already exists');
+				}else{
+					resolve(content);
+				}
+			});
+		})
+		.then(magicstack.build_api_object)
+		.then(magicstack.insert_api_object)
+		.then(function(content){
+			return new Promise(function(resolve) {
+				resolve(content);
+			});
+		})*/
+		.then(function(content){
+			//response.send(content.api_object.body);
+			response.send(content.payload);
 		})
 		.catch(function(err){
 			console.trace();
