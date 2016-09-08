@@ -465,6 +465,11 @@ app.get('/:version_name/users', function (request, response) {
 					};
 
 					content.payload = payload;
+					// delete passwords from content.payload
+					for(var i=0; i < content.payload.length; i++){
+						delete content.payload[i].password;
+					}
+
 					console.log(content.payload);
 
 					resolve(content);
@@ -492,6 +497,79 @@ app.get('/:version_name/users', function (request, response) {
 		})*/
 		.then(function(content){
 			//response.send(content.api_object.body);
+			response.send(content.payload);
+		})
+		.catch(function(err){
+			console.trace();
+			console.log(err);
+			response.send({"error_code":err.code, "error_message":err.message});
+		});
+});
+
+app.get('/:version_name/users/:resource_id', function (request, response) {
+  	var version_name = request.params.version_name;
+  	var resource_id = request.params.resource_id;
+
+	var content = {};
+	content.version_name = version_name;
+	content.request = request;
+	content.resource = 'users';
+	content.resource_id = resource_id;
+
+	magicstack.get_deployment(content)
+		.then(function(content){
+			return new Promise(function(resolve) {
+				// validate swagger
+
+				console.log(content.results);
+
+				if(content.results.length == 0){
+					throw new HeaderException('no available definition for version: '+content.version_name);
+				}else{
+
+					content.swagger = content.results[0].swagger;
+					content.version_id = content.results[0].version_id;
+					resolve(content);
+				}
+			});
+
+		})
+		.then(magicstack.validate_api_key)
+		.then(function(content){
+			return new Promise(function(resolve) {
+				if(!content.api_keys[0]){
+					throw new HeaderException('invalid authorization');
+				}else{
+					content.spec = JSON.parse(content.swagger);
+					content.client_id = content.api_keys[0].client_id;
+					content.api_id = content.api_keys[0].api_id;
+
+					content.query = {"version_id":content.version_id, "body._id":content.resource_id, "active":true};
+
+					resolve(content);
+				}
+			});
+		})
+		.then(magicstack.get_api_objects)
+		.then(function(content){
+			return new Promise(function(resolve) {
+				console.log('RESULTS');
+				console.log(content.results);
+
+				if(content.results.length == 0){
+					throw new ObjectException('retrieval error');
+				}else{
+					content.payload = content.results[0].body;
+
+					// delete password from content.payload
+					delete content.payload.password;
+					console.log(content.payload);
+
+					resolve(content);
+				}
+			});
+		})
+		.then(function(content){
 			response.send(content.payload);
 		})
 		.catch(function(err){
