@@ -1,22 +1,23 @@
+// ext requires
 var express = require('express');
-//var MongoClient = require('mongodb').MongoClient;
 var Promise = require('bluebird');
 var MongoClient = Promise.promisifyAll(require('mongodb')).MongoClient;
 var bodyParser = require('body-parser');
 var crypto = require('crypto');
 var uuid = require('node-uuid');
-
 var app = express();
 
-// parse application/json 
+// internal requires
+var magicstack = require('./magicstack.js');
+var util = require('./util.js');
+var config = require('./config/magicstack.json');
+
+// parse application/json
 app.use(bodyParser.json());
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
 
-var state = {
-  db: null
-};
 
 // exceptions
 var PayloadException = function(message){
@@ -33,247 +34,6 @@ var ObjectException = function(message, code){
 	this.message = message;
 	this.code = (code) ? code : 3001;
 };
-
-var util = {
-	'encrypt_password': function(password){
-		return crypto.createHash('sha1').update(password).digest("hex");
-	},
-
-	'generate_oauth_token': function(){
-		var created = new Date().toISOString();
-		return crypto.createHash('sha1').update(created+uuid.v4()).digest("hex");
-	},
-
-	'validate_email': function(email){
-		return true;
-	}
-};
-
-var magicstack = {
-	'config': {'environment':'dev'},
-
-	'validate_api_key': function(content){
-		return new Promise(function(resolve) {
-			var authorization = content.request.headers['authorization'];
-			console.log('validating');
-			console.log(authorization);
-			var authorization_parts = authorization.split(' ');
-
-			var cursor =state.db.collection('api_keys').find({"basic_key":authorization_parts[1], "active":true}).toArray(function(err, docs){
-				console.log(err);
-
-				content.api_keys = docs;
-				console.log(content);
-				resolve(content);
-			});
-		});
-	},
-
-	'insert_api_object': function(content){
-		return new Promise(function(resolve) {
-			var cursor = state.db.collection('api_objects').insertOne(content.api_object, function(err, result){
-				console.log(err);
-				content.insert_result = result;
-				console.log('result');
-				console.log(result);
-				resolve(content);
-			});
-		});
-	},
-
-	'get_user_by_api': function(content){
-		return new Promise(function(resolve) {
-			var cursor =state.db.collection('api_objects').find({"body.username": content.request.body.username, "api_id": content.api_id, "active": true}).toArray(function(err, docs){
-				console.log(err);
-				content.api_object_users = docs;
-				resolve(content);
-			});
-		});
-	},
-
-	'authenticate_user': function(content){
-		return new Promise(function(resolve) {
-			var cursor =state.db.collection('api_objects').find({"body.username": content.username, "body.password": content.password, "active": true}).toArray(function(err, docs){
-				console.log(err);
-				content.authenticate_users = docs;
-				resolve(content);
-			});
-		});
-	},
-
-	// IS THIS USED!?!?!?!?
-	'retrieve_api_objects': function(content){
-		return new Promise(function(resolve) {
-			var cursor =state.db.collection('api_objects').find({"type":content.type, "version_id":content.version_id, "user_id":content.user_id, "active": true}).toArray(function(err, docs){
-				console.log(err);
-				content.retrieved_api_objects = docs;
-				resolve(content);
-			});
-		});
-	},
-
-	// IS THIS USED!?!?!?!?!?
-	'retrieve_api_objects_by_id': function(content){
-		return new Promise(function(resolve) {
-			var cursor =state.db.collection('api_objects').find({"body._id":content.resource_id, "version_id":content.version_id, "user_id":content.user_id, "active": true}).toArray(function(err, docs){
-				console.log(err);
-				content.retrieved_api_objects = docs;
-				resolve(content);
-			});
-		});
-	},
-
-	'authenticate_token': function(content){
-		return new Promise(function(resolve) {
-			var authorization_parts = content.headers.authorization.split(' ');
-			var token = authorization_parts[1];
-
-			var cursor =state.db.collection('api_oauth_tokens').find({"body.access_token": token, "active": true}).toArray(function(err, docs){
-				console.log(err);
-				content.authenticated_tokens = docs;
-				content.client_id = docs[0].client_id;
-				content.user_id = docs[0].user_id;
-				resolve(content);
-			});
-
-		});
-	},
-
-	'save_oauth_token': function(content){
-		return new Promise(function(resolve) {
-			var object = {};
-			object.api_id = content.authenticate_users[0].api_id;
-			object.version_id = content.authenticate_users[0].version_id;
-			object.user_id = content.authenticate_users[0].body._id;
-			object.client_id = content.authenticate_users[0].client_id;
-			object.active = true;
-			object.body = {};
-			object.body._created = new Date().toISOString();
-			object.body.access_token = util.generate_oauth_token();
-
-			var cursor = state.db.collection('api_oauth_tokens').insertOne(object, function(err, result){
-				console.log(err);
-				content.object = object;
-				resolve(content);
-			});
-		});
-	},
-
-	// DEPRECATED
-	'get_swagger': function(content){
-		// get swagger for this version
-
-		return new Promise(function(resolve) {
-			var cursor =state.db.collection('swaggers').find({"api_id":content.api_id, "version_name":content.version_name, "active":true}).toArray(function(err, results){
-				console.log(err);
-				content.swagger = results;
-				resolve(content);
-			});
-		});
-	},
-
-	'get_deployment': function(content){
-		// get swagger for this version
-
-		return new Promise(function(resolve) {
-			var cursor =state.db.collection('deployments').find({"environment":magicstack.config.environment, "version_name":content.version_name, "active":true}).toArray(function(err, results){
-				console.log(err);
-				//console.log(results);
-
-				//content.swagger = results[0].swagger;
-				content.results = results;
-				resolve(content);
-			});
-		});
-	},
-
-	'get_api_objects': function(content){
-		return new Promise(function(resolve) {
-			var cursor =state.db.collection('api_objects').find(content.query).toArray(function(err, results){
-				console.log(err);
-
-				content.results = results;
-				resolve(content);
-			});
-		});
-	},
-
-	'build_api_object': function(content){
-		return new Promise(function(resolve) {
-			console.log('BUILD API OBJECT');
-			console.log(content.spec.paths);
-			var spec = content.spec;
-			var request = content.request;
-
-			if(!spec.paths[content.resource]){
-				throw new ObjectException("invalid resource: "+content.resource);
-			}
-
-			if(!spec.paths[content.resource][request.method.toLowerCase()]){
-				throw new ObjectException("method not allowed: "+request.method.toLowerCase());
-			}
-
-			var parameters = spec.paths[content.resource][request.method.toLowerCase()].parameters[0];
-			var definitions = spec.definitions;
-
-			// check for required body params
-			if(parameters.required == true && parameters.in == 'body'){
-				var body = {};
-
-				// get reference definition
-				var schema = parameters.schema;
-				var schema_parts = schema['$ref'].split('#/definitions/');
-				var required_params = definitions[schema_parts[1]].required;
-				var properties = definitions[schema_parts[1]].properties;
-
-				// build payload
-				for(var key in properties){
-					if(properties[key].readOnly == true){
-						continue;
-					}else if(request.body[key]){
-						if(schema_parts[1].toLowerCase() == 'user' && key.toLowerCase() == 'password'){
-							//body[key] = crypto.createHash('sha1').update(request.body[key]+request.body['username']).digest("hex")
-							// validate that user is an email
-
-							body[key] = util.encrypt_password(request.body[key]);
-						}else{
-							body[key] = request.body[key];
-						}
-					}
-				}
-
-				// confirm that payload has all required params
-				for(var i=0; i < required_params.length; i++){
-					if(!body[required_params[i]]){
-						throw new PayloadException("missing parameter: "+required_params[i]);
-					}
-				}
-			}
-
-			if(request.method.toLowerCase() == 'post'){
-				body._created = new Date().toISOString();
-				body._type = schema_parts[1].toLowerCase();
-				body._id = crypto.createHash('sha1').update(body._created+body._type+uuid.v4()).digest("hex");
-			}
-
-			content.api_object = {"body":body, "type":schema_parts[1].toLowerCase(), "api_id":content.api_id, "version_id":content.version_id,
-								  "client_id":content.client_id, "active":true, "resource":content.resource};
-
-			if(content.user_id){
-				content.api_object.user_id = content.user_id;
-			}
-			resolve(content);
-		});
-	}
-};
-
-MongoClient.connect('mongodb://devtest:devtest@aws-us-east-1-portal.14.dblayer.com:10871,aws-us-east-1-portal.13.dblayer.com:10856/dev-saasdoc?authMechanism=SCRAM-SHA-1', function(err, db) {
-  if (err) {
-    throw err;
-  }else{
-    state.db = db;
-  }
-});
 
 var get_path_details_from_spec = function(spec, request){
 	console.log('get_auth_from_spec');
@@ -476,25 +236,6 @@ app.get('/:version_name/users', function (request, response) {
 				}
 			});
 		})
-		/*.then(magicstack.get_user_by_api)
-		.then(function(content){
-			return new Promise(function(resolve) {
-				// err if user already exists
-
-				if(content.api_object_users.length > 0){
-					throw new ObjectException('user already exists');
-				}else{
-					resolve(content);
-				}
-			});
-		})
-		.then(magicstack.build_api_object)
-		.then(magicstack.insert_api_object)
-		.then(function(content){
-			return new Promise(function(resolve) {
-				resolve(content);
-			});
-		})*/
 		.then(function(content){
 			//response.send(content.api_object.body);
 			response.send(content.payload);
@@ -570,6 +311,70 @@ app.get('/:version_name/users/:resource_id', function (request, response) {
 			});
 		})
 		.then(function(content){
+			response.send(content.payload);
+		})
+		.catch(function(err){
+			console.trace();
+			console.log(err);
+			response.send({"error_code":err.code, "error_message":err.message});
+		});
+});
+
+app.put('/:version_name/users/:resource_id', function (request, response) {
+  	var version_name = request.params.version_name;
+  	var resource_id = request.params.resource_id;
+
+	var content = {};
+	content.version_name = version_name;
+	content.request = request;
+	content.resource = 'users/{user_id}';
+	content.resource_id = resource_id;
+
+	magicstack.get_deployment(content)
+		.then(function(content){
+			return new Promise(function(resolve) {
+				// validate swagger
+
+				console.log(content.results);
+
+				if(content.results.length == 0){
+					throw new HeaderException('no available definition for version: '+content.version_name);
+				}else{
+					content.swagger = content.results[0].swagger;
+					content.version_id = content.results[0].version_id;
+					resolve(content);
+				}
+			});
+
+		})
+		.then(magicstack.validate_api_key)
+		.then(function(content){
+			return new Promise(function(resolve) {
+				if(!content.api_keys[0]){
+					throw new HeaderException('invalid authorization');
+				}else{
+					content.spec = JSON.parse(content.swagger);
+					content.client_id = content.api_keys[0].client_id;
+					content.api_id = content.api_keys[0].api_id;
+
+					//content.query = {"version_id":content.version_id, "body._id":content.resource_id, "active":true};
+
+					resolve(content);
+				}
+			});
+		})
+		.then(magicstack.build_api_object)
+		.then(magicstack.delete_api_object)
+		.then(magicstack.insert_api_object)
+		.then(function(content){
+			return new Promise(function(resolve) {
+				content.payload = content.api_object.body;
+				delete content.payload.password;
+				resolve(content);
+			});
+		})
+		.then(function(content){
+			//response.send(content.api_object.body);
 			response.send(content.payload);
 		})
 		.catch(function(err){
