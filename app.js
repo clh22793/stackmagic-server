@@ -81,6 +81,12 @@ app.get('/:version_name/users', function (request, response) {
 		.then(magicstack.validate_swagger_spec)
 		.then(magicstack.get_api_key)
 		.then(magicstack.validate_api_key)
+		.then(function(content){
+			return new Promise(function(resolve) {
+				content.query = {"resource":content.resource, "active":true, "client_id":content.client_id};
+				resolve(content);
+			});
+		})
 		.then(magicstack.get_api_objects)
 		.then(function(content){
 			return new Promise(function(resolve) {
@@ -135,7 +141,7 @@ app.get('/:version_name/users/:resource_id', function (request, response) {
 		.then(magicstack.validate_api_key)
 		.then(function(content){
 			return new Promise(function(resolve) {
-				content.query = {"version_id":content.version_id, "body._id":content.resource_id, "active":true};
+				content.query = {"version_id":content.version_id, "body._id":content.resource_id, "active":true, "client_id":content.client_id, "resource":content.resource};
 				resolve(content);
 			});
 		})
@@ -186,7 +192,7 @@ app.put('/:version_name/users/:resource_id', function (request, response) {
 		.then(magicstack.validate_api_key)
 		.then(function(content){ // set query for db retrieval
 			return new Promise(function(resolve) {
-				content.query = {"version_id":content.version_id, "body._id":content.resource_id, "active":true};
+				content.query = {"version_id":content.version_id, "body._id":content.resource_id, "active":true, "client_id":content.client_id, "resource":content.resource};
 				resolve(content);
 			});
 		})
@@ -199,7 +205,6 @@ app.put('/:version_name/users/:resource_id', function (request, response) {
 				}else{
 					content._created = content.results[0].body._created;
 				}
-
 				resolve(content);
 			});
 		})
@@ -223,6 +228,33 @@ app.put('/:version_name/users/:resource_id', function (request, response) {
 			response.send({"error_code":err.code, "error_message":err.message});
 		});
 });
+
+app.delete('/:version_name/users/:resource_id', function (request, response) {
+  	var version_name = request.params.version_name;
+  	var resource_id = request.params.resource_id;
+
+	var content = {};
+	content.version_name = version_name;
+	content.request = request;
+	content.resource = 'user';
+	content.path = 'users/{user_id}';
+	content.resource_id = resource_id;
+
+	magicstack.get_deployment(content)
+		.then(magicstack.validate_swagger_spec)
+		.then(magicstack.get_api_key)
+		.then(magicstack.validate_api_key)
+		.then(magicstack.delete_api_object)
+		.then(function(content){
+			response.send({});
+		})
+		.catch(function(err){
+			console.trace();
+			console.log(err);
+			response.send({"error_code":err.code, "error_message":err.message});
+		});
+});
+
 
 app.post('/api/:api_id/:version_id/oauth/token', function (request, response) {
 	var username = request.body.username;
