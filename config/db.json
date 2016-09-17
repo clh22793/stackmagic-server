@@ -1,0 +1,5 @@
+{
+  "dev":{
+    "db": "mongodb://devtest:devtest@aws-us-east-1-portal.14.dblayer.com:10871,aws-us-east-1-portal.13.dblayer.com:10856/dev-saasdoc?authMechanism=SCRAM-SHA-1"
+  }
+}

@@ -93,28 +93,23 @@ app.get('/:version_name/users', function (request, response) {
 				console.log('RESULTS');
 				console.log(content.results);
 
-				//if(content.results.length == 0){
-				//	throw new ObjectException('retrieval error');
-				//}else{
-					var payload = [];
-					for(var i=0; i < content.results.length; i++){
-						payload.push(content.results[i].body);
-					};
+				var payload = [];
+				for(var i=0; i < content.results.length; i++){
+					payload.push(content.results[i].body);
+				};
 
-					content.payload = payload;
-					// delete passwords from content.payload
-					for(var i=0; i < content.payload.length; i++){
-						delete content.payload[i].password;
-					}
+				content.payload = payload;
+				// delete passwords from content.payload
+				for(var i=0; i < content.payload.length; i++){
+					delete content.payload[i].password;
+				}
 
-					console.log(content.payload);
+				console.log(content.payload);
 
-					resolve(content);
-				//}
+				resolve(content);
 			});
 		})
 		.then(function(content){
-			//response.send(content.api_object.body);
 			response.send(content.payload);
 		})
 		.catch(function(err){
@@ -152,8 +147,8 @@ app.get('/:version_name/users/:resource_id', function (request, response) {
 				console.log(content.results);
 
 				if(content.results.length == 0){
-					//throw new ObjectException('retrieval error');
-					content.payload = {};
+					throw new exceptions.ObjectException('retrieval error');
+					//content.payload = {};
 				}else{
 					content.payload = content.results[0].body;
 

@@ -5,6 +5,7 @@ var uuid = require('node-uuid');
 
 // internal requires
 var config = require('./config/magicstack.json');
+var db_config = require('./config/db.json');
 var util = require('./util.js');
 var exceptions = require('./exceptions.js');
 
@@ -12,7 +13,7 @@ var state = {
   db: null
 };
 
-MongoClient.connect('mongodb://devtest:devtest@aws-us-east-1-portal.14.dblayer.com:10871,aws-us-east-1-portal.13.dblayer.com:10856/dev-saasdoc?authMechanism=SCRAM-SHA-1', function(err, db) {
+MongoClient.connect(db_config[config.environment].db, function(err, db) {
   if (err) {
     throw err;
   }else{
