@@ -199,6 +199,10 @@ app.put('/:version_name/users/:resource_id', function (request, response) {
 					throw new exceptions.ObjectException('retrieval error');
 				}else{
 					content._created = content.results[0].body._created;
+					if(content.resource == 'user'){
+						content.password = content.results[0].body.password; // ONLY FOR USER RESOURCE
+					}
+
 				}
 				resolve(content);
 			});

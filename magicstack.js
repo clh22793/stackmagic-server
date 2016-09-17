@@ -259,7 +259,12 @@ exports.build_api_object = function(content){
             // confirm that payload has all required params
             for(var i=0; i < required_params.length; i++){
                 if(!body[required_params[i]]){
-                    throw new exceptions.PayloadException("missing parameter: "+required_params[i]);
+                    if(schema_parts[1].toLowerCase() == 'user' && required_params[i].toLowerCase() == 'password' && request.method.toLowerCase() == 'put'){
+                        // do nothing; THIS IS A HACK; the real fix is a custom param in the swagger spec that denotes parameters that are required for post but optional for put
+                    }else{
+                        throw new exceptions.PayloadException("missing required parameter: "+required_params[i]);
+                    }
+
                 }
             }
         }
@@ -278,6 +283,7 @@ exports.build_api_object = function(content){
             body._type = schema_parts[1].toLowerCase();
             body._resource = schema_parts[1].toLowerCase();
             body._id = content.resource_id;
+            body.password = body.password || content.password;
         }
 
         content.api_object = {"body":body, "type":schema_parts[1].toLowerCase(), "api_id":content.api_id, "version_id":content.version_id,
