@@ -1,10 +1,12 @@
 // ext requires
 var Promise = require('bluebird');
 var MongoClient = Promise.promisifyAll(require('mongodb')).MongoClient;
+var uuid = require('node-uuid');
 
 // internal requires
 var config = require('./config/magicstack.json');
 var util = require('./util.js');
+var exceptions = require('./exceptions.js');
 
 var state = {
   db: null
@@ -18,7 +20,7 @@ MongoClient.connect('mongodb://devtest:devtest@aws-us-east-1-portal.14.dblayer.c
   }
 });
 
-exports.validate_api_key = function(content){
+exports.get_api_key = function(content){
     return new Promise(function(resolve) {
         var authorization = content.request.headers['authorization'];
         console.log('validating');
@@ -32,6 +34,31 @@ exports.validate_api_key = function(content){
             console.log(content);
             resolve(content);
         });
+    });
+};
+
+exports.validate_api_key = function(content){
+    return new Promise(function(resolve) {
+        if(!content.api_keys[0]){
+            throw new HeaderException('invalid api key');
+        }else{
+            //content.spec = JSON.parse(content.swagger);
+            content.client_id = content.api_keys[0].client_id;
+            content.api_id = content.api_keys[0].api_id;
+            resolve(content);
+        }
+    });
+};
+
+exports.validate_user_uniqueness = function(content){
+    return new Promise(function(resolve) {
+        // err if user already exists
+
+        if(content.api_object_users.length > 0){
+            throw new exceptions.ObjectException('user already exists');
+        }else{
+            resolve(content);
+        }
     });
 };
 
@@ -179,25 +206,27 @@ exports.get_api_objects = function(content){
 exports.build_api_object = function(content){
     return new Promise(function(resolve) {
         console.log('BUILD API OBJECT');
+        content.spec = JSON.parse(content.swagger);
         console.log(content.spec.paths);
+
         var spec = content.spec;
         var request = content.request;
 
         console.log('REQUEST BODY');
         console.log(request.body);
 
-        if(!spec.paths[content.resource]){
-            throw new ObjectException("invalid resource: "+content.resource);
+        if(!spec.paths[content.path]){
+            throw new ObjectException("invalid path: "+content.path);
         }
 
         console.log('build api object');
-        console.log(spec.paths[content.resource.toLowerCase()]);
+        console.log(spec.paths[content.path.toLowerCase()]);
 
-        if(!spec.paths[content.resource.toLowerCase()][request.method.toLowerCase()]){
+        if(!spec.paths[content.path.toLowerCase()][request.method.toLowerCase()]){
             throw new ObjectException("method not allowed: "+request.method.toLowerCase());
         }
 
-        var parameters = spec.paths[content.resource][request.method.toLowerCase()].parameters[0];
+        var parameters = spec.paths[content.path][request.method.toLowerCase()].parameters[0];
         var definitions = spec.definitions;
 
         // check for required body params
@@ -229,20 +258,29 @@ exports.build_api_object = function(content){
             // confirm that payload has all required params
             for(var i=0; i < required_params.length; i++){
                 if(!body[required_params[i]]){
-                    throw new PayloadException("missing parameter: "+required_params[i]);
+                    throw new exceptions.PayloadException("missing parameter: "+required_params[i]);
                 }
             }
         }
 
+        var current_ISODate = new Date().toISOString();
+
         if(request.method.toLowerCase() == 'post'){
-            body._created = new Date().toISOString();
+            body._created = current_ISODate;
+            body._lastModified = current_ISODate;
             body._type = schema_parts[1].toLowerCase();
-            body._id = crypto.createHash('sha1').update(body._created+body._type+uuid.v4()).digest("hex");
+            body._resource = schema_parts[1].toLowerCase();
+            body._id = util.hash('sha1', body._created+body._type+uuid.v4());
         }else if(request.method.toLowerCase() == 'put'){
-            body._lastModified = new Date().toISOString();
+            body._created = content._created;
+            body._lastModified = current_ISODate;
             body._type = schema_parts[1].toLowerCase();
+            body._resource = schema_parts[1].toLowerCase();
             body._id = content.resource_id;
         }
+
+        content.api_object = {"body":body, "type":schema_parts[1].toLowerCase(), "api_id":content.api_id, "version_id":content.version_id,
+                              "client_id":content.client_id, "active":true, "resource":content.resource};
 
         content.api_object = {"body":body, "type":schema_parts[1].toLowerCase(), "api_id":content.api_id, "version_id":content.version_id,
                               "client_id":content.client_id, "active":true, "resource":content.resource};
@@ -254,7 +292,32 @@ exports.build_api_object = function(content){
     });
 };
 
+var validate_headers = function(headers, name, value){
+	console.log(headers);
 
+	if(headers[name] !== value){
+		throw new exceptions.HeaderException('invalid headers');
+	}
+};
+
+exports.validate_swagger_spec = function(content){
+    // confirm proper headers are available
+    //validate_headers(content.request.headers, 'content-type', 'application/json');
+
+    return new Promise(function(resolve) {
+        // validate swagger
+
+        console.log(content.results);
+
+        if(content.results.length == 0){
+            throw new exceptions.HeaderException('no available definition for version: '+content.version_name);
+        }else{
+            content.swagger = content.results[0].swagger;
+            content.version_id = content.results[0].version_id;
+            resolve(content);
+        }
+    });
+}
 
 /*var magicstack = {
 	'config': {'environment':'dev'},

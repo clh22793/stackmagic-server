@@ -1,39 +1,20 @@
 // ext requires
 var express = require('express');
 var Promise = require('bluebird');
-var MongoClient = Promise.promisifyAll(require('mongodb')).MongoClient;
 var bodyParser = require('body-parser');
-var crypto = require('crypto');
-var uuid = require('node-uuid');
 var app = express();
 
 // internal requires
 var magicstack = require('./magicstack.js');
 var util = require('./util.js');
 var config = require('./config/magicstack.json');
+var exceptions = require('./exceptions.js');
 
 // parse application/json
 app.use(bodyParser.json());
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
-
-
-// exceptions
-var PayloadException = function(message){
-	this.message = message;
-	this.code = 1000;
-};
-
-var HeaderException = function(message, code){
-	this.message = message;
-	this.code = (code) ? code : 2001;
-};
-
-var ObjectException = function(message, code){
-	this.message = message;
-	this.code = (code) ? code : 3001;
-};
 
 var get_path_details_from_spec = function(spec, request){
 	console.log('get_auth_from_spec');
@@ -56,46 +37,6 @@ var get_auth_from_spec = function(spec_path, request){
 	}
 };
 
-// DEPRECATED
-var get_swagger = function(api_id, version_name, request){
-  	// get swagger for this version
-
-	return new Promise(function(resolve) {
-		var cursor =state.db.collection('swaggers').find({"api_id":api_id, "name":version_name, "active":true}).toArray()
-			.then(function(doc){
-				var spec = JSON.parse(doc[0].content);
-				console.log(spec);
-				var spec_path = get_path_details_from_spec(spec, request);
-
-				// get the auth from swagger spec
-
-				var auth = get_auth_from_spec(spec_path, request);
-				console.log(auth);
-
-				resolve({"auth":auth, "spec":spec, "request":request, "api_id":api_id, "version_id":version_id, "x-api-key":request.headers['x-api-key']});
-			});
-  	});
-};
-
-// IS THIS USED!?!?!?!?!?
-var validate_swagger = function(){
-	return new Promise(function(resolve) {
-		var cursor =state.db.collection('swaggers').find({"api_id":api_id, "version_id":version_id, "active":true}).toArray()
-			.then(function(doc){
-				var spec = JSON.parse(doc[0].content);
-				console.log(spec);
-				var spec_path = get_path_details_from_spec(spec, request);
-
-				// get the auth from swagger spec
-
-				var auth = get_auth_from_spec(spec_path, request);
-				console.log(auth);
-
-				resolve({"auth":auth, "spec":spec, "request":request, "api_id":api_id, "version_id":version_id, "x-api-key":request.headers['x-api-key']});
-			});
-  	});
-};
-
 app.get('/', function (req, res) {
   res.send('abra cadabra!');
 });
@@ -106,58 +47,17 @@ app.post('/:version_name/users', function (request, response) {
 	var content = {};
 	content.version_name = version_name;
 	content.request = request;
-	content.resource = 'users';
+	content.resource = 'user';
+	content.path = 'users';
 
 	magicstack.get_deployment(content)
-		.then(function(content){
-			return new Promise(function(resolve) {
-				// validate swagger
-
-				console.log(content.results);
-
-				if(content.results.length == 0){
-					throw new HeaderException('no available definition for version: '+content.version_name);
-				}else{
-
-					content.swagger = content.results[0].swagger;
-					content.version_id = content.results[0].version_id;
-					resolve(content);
-				}
-			});
-
-		})
+		.then(magicstack.validate_swagger_spec)
+		.then(magicstack.get_api_key)
 		.then(magicstack.validate_api_key)
-		.then(function(content){
-			return new Promise(function(resolve) {
-				if(!content.api_keys[0]){
-					throw new HeaderException('invalid x-api-key');
-				}else{
-					content.spec = JSON.parse(content.swagger);
-					content.client_id = content.api_keys[0].client_id;
-					content.api_id = content.api_keys[0].api_id;
-					resolve(content);
-				}
-			});
-		})
 		.then(magicstack.get_user_by_api)
-		.then(function(content){
-			return new Promise(function(resolve) {
-				// err if user already exists
-
-				if(content.api_object_users.length > 0){
-					throw new ObjectException('user already exists');
-				}else{
-					resolve(content);
-				}
-			});
-		})
+		.then(magicstack.validate_user_uniqueness)
 		.then(magicstack.build_api_object)
 		.then(magicstack.insert_api_object)
-		.then(function(content){
-			return new Promise(function(resolve) {
-				resolve(content);
-			});
-		})
 		.then(function(content){
 			response.send(content.api_object.body);
 		})
@@ -174,51 +74,22 @@ app.get('/:version_name/users', function (request, response) {
 	var content = {};
 	content.version_name = version_name;
 	content.request = request;
-	content.resource = 'users';
+	content.resource = 'user';
+	content.path = 'users';
 
 	magicstack.get_deployment(content)
-		.then(function(content){
-			return new Promise(function(resolve) {
-				// validate swagger
-
-				console.log(content.results);
-
-				if(content.results.length == 0){
-					throw new HeaderException('no available definition for version: '+content.version_name);
-				}else{
-
-					content.swagger = content.results[0].swagger;
-					content.version_id = content.results[0].version_id;
-					resolve(content);
-				}
-			});
-
-		})
+		.then(magicstack.validate_swagger_spec)
+		.then(magicstack.get_api_key)
 		.then(magicstack.validate_api_key)
-		.then(function(content){
-			return new Promise(function(resolve) {
-				if(!content.api_keys[0]){
-					throw new HeaderException('invalid authorization');
-				}else{
-					content.spec = JSON.parse(content.swagger);
-					content.client_id = content.api_keys[0].client_id;
-					content.api_id = content.api_keys[0].api_id;
-
-					content.query = {"version_id":content.version_id, "resource":content.resource, "active":true};
-
-					resolve(content);
-				}
-			});
-		})
 		.then(magicstack.get_api_objects)
 		.then(function(content){
 			return new Promise(function(resolve) {
 				console.log('RESULTS');
 				console.log(content.results);
 
-				if(content.results.length == 0){
-					throw new ObjectException('retrieval error');
-				}else{
+				//if(content.results.length == 0){
+				//	throw new ObjectException('retrieval error');
+				//}else{
 					var payload = [];
 					for(var i=0; i < content.results.length; i++){
 						payload.push(content.results[i].body);
@@ -233,7 +104,7 @@ app.get('/:version_name/users', function (request, response) {
 					console.log(content.payload);
 
 					resolve(content);
-				}
+				//}
 			});
 		})
 		.then(function(content){
@@ -254,41 +125,18 @@ app.get('/:version_name/users/:resource_id', function (request, response) {
 	var content = {};
 	content.version_name = version_name;
 	content.request = request;
-	content.resource = 'users';
+	content.resource = 'user';
+	content.path = 'users/{user_id}';
 	content.resource_id = resource_id;
 
 	magicstack.get_deployment(content)
-		.then(function(content){
-			return new Promise(function(resolve) {
-				// validate swagger
-
-				console.log(content.results);
-
-				if(content.results.length == 0){
-					throw new HeaderException('no available definition for version: '+content.version_name);
-				}else{
-
-					content.swagger = content.results[0].swagger;
-					content.version_id = content.results[0].version_id;
-					resolve(content);
-				}
-			});
-
-		})
+		.then(magicstack.validate_swagger_spec)
+		.then(magicstack.get_api_key)
 		.then(magicstack.validate_api_key)
 		.then(function(content){
 			return new Promise(function(resolve) {
-				if(!content.api_keys[0]){
-					throw new HeaderException('invalid authorization');
-				}else{
-					content.spec = JSON.parse(content.swagger);
-					content.client_id = content.api_keys[0].client_id;
-					content.api_id = content.api_keys[0].api_id;
-
-					content.query = {"version_id":content.version_id, "body._id":content.resource_id, "active":true};
-
-					resolve(content);
-				}
+				content.query = {"version_id":content.version_id, "body._id":content.resource_id, "active":true};
+				resolve(content);
 			});
 		})
 		.then(magicstack.get_api_objects)
@@ -298,16 +146,17 @@ app.get('/:version_name/users/:resource_id', function (request, response) {
 				console.log(content.results);
 
 				if(content.results.length == 0){
-					throw new ObjectException('retrieval error');
+					//throw new ObjectException('retrieval error');
+					content.payload = {};
 				}else{
 					content.payload = content.results[0].body;
 
 					// delete password from content.payload
 					delete content.payload.password;
 					console.log(content.payload);
-
-					resolve(content);
 				}
+
+				resolve(content);
 			});
 		})
 		.then(function(content){
@@ -327,40 +176,31 @@ app.put('/:version_name/users/:resource_id', function (request, response) {
 	var content = {};
 	content.version_name = version_name;
 	content.request = request;
-	content.resource = 'users/{user_id}';
+	content.resource = 'user';
+	content.path = 'users/{user_id}';
 	content.resource_id = resource_id;
 
 	magicstack.get_deployment(content)
-		.then(function(content){
+		.then(magicstack.validate_swagger_spec)
+		.then(magicstack.get_api_key)
+		.then(magicstack.validate_api_key)
+		.then(function(content){ // set query for db retrieval
 			return new Promise(function(resolve) {
-				// validate swagger
-
-				console.log(content.results);
+				content.query = {"version_id":content.version_id, "body._id":content.resource_id, "active":true};
+				resolve(content);
+			});
+		})
+		.then(magicstack.get_api_objects)
+		.then(function(content){ // set content._created
+			return new Promise(function(resolve) {
 
 				if(content.results.length == 0){
-					throw new HeaderException('no available definition for version: '+content.version_name);
+					throw new exceptions.ObjectException('retrieval error');
 				}else{
-					content.swagger = content.results[0].swagger;
-					content.version_id = content.results[0].version_id;
-					resolve(content);
+					content._created = content.results[0].body._created;
 				}
-			});
 
-		})
-		.then(magicstack.validate_api_key)
-		.then(function(content){
-			return new Promise(function(resolve) {
-				if(!content.api_keys[0]){
-					throw new HeaderException('invalid authorization');
-				}else{
-					content.spec = JSON.parse(content.swagger);
-					content.client_id = content.api_keys[0].client_id;
-					content.api_id = content.api_keys[0].api_id;
-
-					//content.query = {"version_id":content.version_id, "body._id":content.resource_id, "active":true};
-
-					resolve(content);
-				}
+				resolve(content);
 			});
 		})
 		.then(magicstack.build_api_object)
@@ -475,7 +315,6 @@ app.post('/api/:api_id/:version_id/:resource', function (request, response) {
 			response.send({"error_code":err.code, "error_message":err.message});
 		});
 });
-
 
 app.get('/api/:api_id/:version_id/:resource', function (request, response) {
 	var content = init_content(request);
