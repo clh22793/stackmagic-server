@@ -99,9 +99,9 @@ exports.get_user_by_api = function(content){
 
 exports.authenticate_user = function(content){
     return new Promise(function(resolve) {
-        var cursor =state.db.collection('api_objects').find({"body.username": content.username, "body.password": content.password, "active": true}).toArray(function(err, docs){
+        var cursor =state.db.collection('api_objects').find({"body.username": content.username, "body.password": util.encrypt_password(content.password), "active": true}).toArray(function(err, docs){
             console.log(err);
-            content.authenticate_users = docs;
+            content.results = docs;
             resolve(content);
         });
     });
@@ -147,19 +147,11 @@ exports.authenticate_token = function(content){
 
 exports.save_oauth_token = function(content){
     return new Promise(function(resolve) {
-        var object = {};
-        object.api_id = content.authenticate_users[0].api_id;
-        object.version_id = content.authenticate_users[0].version_id;
-        object.user_id = content.authenticate_users[0].body._id;
-        object.client_id = content.authenticate_users[0].client_id;
-        object.active = true;
-        object.body = {};
-        object.body._created = new Date().toISOString();
-        object.body.access_token = util.generate_oauth_token();
 
-        var cursor = state.db.collection('api_oauth_tokens').insertOne(object, function(err, result){
+        var cursor = state.db.collection('api_oauth_tokens').insertOne(content.oauth_record, function(err, result){
             console.log(err);
-            content.object = object;
+            //content.object = object;
+            content.result = result;
             resolve(content);
         });
     });

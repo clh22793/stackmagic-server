@@ -202,7 +202,6 @@ app.put('/:version_name/users/:resource_id', function (request, response) {
 					if(content.resource == 'user'){
 						content.password = content.results[0].body.password; // ONLY FOR USER RESOURCE
 					}
-
 				}
 				resolve(content);
 			});
@@ -255,29 +254,46 @@ app.delete('/:version_name/users/:resource_id', function (request, response) {
 });
 
 
-app.post('/api/:api_id/:version_id/oauth/token', function (request, response) {
-	var username = request.body.username;
-	var password = request.body.password;
-
+app.post('/:version_name/oauth2/token', function (request, response) {
+	console.log(request.query);
 	var content = {};
-	content.username = request.body.username;
-	content.password = util.encrypt_password(request.body.password);
 
-	magicstack.authenticate_user(content)
+	content.request = request;
+	content.version_name = request.params.version_name;
+	content.username = request.query.username;
+	content.password = request.query.password;
+	content.grant_type = request.query.grant_type;
+
+	magicstack.get_deployment(content)
+		.then(magicstack.validate_swagger_spec)
+		.then(magicstack.get_api_key)
+		.then(magicstack.validate_api_key)
+		.then(magicstack.authenticate_user)
 		.then(function(content){
 			return new Promise(function(resolve) {
-				// validate swagger
-
-				if(content.authenticate_users.length == 0){
-					throw new ObjectException('invalid credentials');
+				if(content.results.length == 0){
+					throw new exceptions.ObjectException('invalid credentials');
 				}else{
-					resolve(content);
+					//content.payload = content.results[0].body;
+					var object = {};
+					object.api_id = content.api_id;
+					object.version_id = content.version_id;
+					object.user_id = content.results[0].body._id;
+					object.client_id = content.client_id;
+					object.active = true;
+					object.body = {};
+					object.body._created = new Date().toISOString();
+					object.body.access_token = util.generate_oauth_token();
+
+					content.oauth_record = object;
 				}
+
+				resolve(content);
 			});
 		})
 		.then(magicstack.save_oauth_token)
 		.then(function(content){
-			response.send(content.object.body);
+			response.send(content.oauth_record.body);
 		})
 		.catch(function(err){
 			console.trace();
@@ -286,6 +302,7 @@ app.post('/api/:api_id/:version_id/oauth/token', function (request, response) {
 		});
 });
 
+/*
 var init_content = function(request){
 	var content = {};
 	content.api_id = request.params.api_id;
@@ -519,7 +536,7 @@ app.put('/api/:api_id/:version_id/:resource/:resource_id', function (request, re
 			response.send({"error_code":err.code, "error_message":err.message});
 		});
 });
-
+*/
 
 app.listen(3000, function () {
   console.log('Example app listening on port 3000!');
