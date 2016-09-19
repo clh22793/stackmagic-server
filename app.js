@@ -68,6 +68,56 @@ app.post('/:version_name/users', function (request, response) {
 		});
 });
 
+app.post('/:version_name/:plurality', function (request, response) {
+  	//var version_name = request.params.version_name;
+
+	var content = {};
+	content.version_name = request.params.version_name;
+	content.request = request;
+	content.plurality = request.params.plurality;
+
+	//content.resource = 'user'; // GET THIS DYNAMICALLY!
+	//content.path = 'users'; // GET THIS DYNAMICALLY!
+
+	magicstack.get_deployment(content)
+		.then(magicstack.validate_swagger_spec)
+		.then(magicstack.get_api_key)
+		.then(magicstack.validate_api_key)
+		.then(magicstack.get_resource)
+		.then(function(content){ // dynamically assign content.resource, content.path
+			return new Promise(function(resolve){
+				if(content.results.length == 0){
+					throw new exceptions.ObjectException('could not find resource');
+				}else{
+					content.resource = content.results[0].name.toLowerCase();
+					content.path = content.plurality;
+				}
+
+				resolve(content);
+			});
+		})
+		.then(function(content){ // set access control policy
+			return new Promise(function(resolve){
+				content.access_control_policy = {"owner":content.user_id, "access_control_list":[{"type":"user", "id":content.user_id, "permissions":["read","write"]}]};
+
+				resolve(content);
+			});
+
+		})
+		//.then(magicstack.get_user_by_api)
+		//.then(magicstack.validate_user_uniqueness)
+		.then(magicstack.build_api_object)
+		.then(magicstack.insert_api_object)
+		.then(function(content){
+			response.send(content.api_object.body);
+		})
+		.catch(function(err){
+			console.trace();
+			console.log(err);
+			response.send({"error_code":err.code, "error_message":err.message});
+		});
+});
+
 app.get('/:version_name/users', function (request, response) {
   	var version_name = request.params.version_name;
 

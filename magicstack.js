@@ -28,7 +28,15 @@ exports.get_api_key = function(content){
         console.log(authorization);
         var authorization_parts = authorization.split(' ');
 
-        var cursor =state.db.collection('api_keys').find({"basic_key":authorization_parts[1], "active":true}).toArray(function(err, docs){
+        if(authorization_parts[0].toLowerCase() == 'basic'){
+            var collection = "api_keys";
+            var query = {"basic_key":authorization_parts[1], "active":true};
+        }else if(authorization_parts[0].toLowerCase() == 'bearer'){
+            var collection = "api_oauth_tokens";
+            var query = {"body.access_token": authorization_parts[1],"active":true};
+        }
+
+        var cursor =state.db.collection(collection).find(query).toArray(function(err, docs){
             console.log(err);
 
             content.api_keys = docs;
@@ -46,6 +54,7 @@ exports.validate_api_key = function(content){
             //content.spec = JSON.parse(content.swagger);
             content.client_id = content.api_keys[0].client_id;
             content.api_id = content.api_keys[0].api_id;
+            content.user_id = content.api_keys[0].user_id || null;
             resolve(content);
         }
     });
@@ -176,14 +185,24 @@ exports.get_deployment = function(content){
     return new Promise(function(resolve) {
         var cursor =state.db.collection('deployments').find({"environment":config.environment, "version_name":content.version_name, "active":true}).toArray(function(err, results){
             console.log(err);
-            //console.log(results);
 
-            //content.swagger = results[0].swagger;
             content.results = results;
             resolve(content);
         });
     });
 };
+
+exports.get_resource = function(content){
+    return new Promise(function(resolve) {
+        var cursor =state.db.collection('resources').find({"plurality":content.plurality, "version_id":content.version_id, "active":true}).toArray(function(err, results){
+            console.log(err);
+
+            console.log(results);
+            content.results = results;
+            resolve(content);
+        });
+    });
+}
 
 exports.get_api_objects = function(content){
     return new Promise(function(resolve) {
@@ -209,14 +228,14 @@ exports.build_api_object = function(content){
         console.log(request.body);
 
         if(!spec.paths[content.path]){
-            throw new ObjectException("invalid path: "+content.path);
+            throw new exceptions.ObjectException("invalid path: "+content.path);
         }
 
         console.log('build api object');
         console.log(spec.paths[content.path.toLowerCase()]);
 
         if(!spec.paths[content.path.toLowerCase()][request.method.toLowerCase()]){
-            throw new ObjectException("method not allowed: "+request.method.toLowerCase());
+            throw new exceptions.ObjectException("method not allowed: "+request.method.toLowerCase());
         }
 
         var parameters = spec.paths[content.path][request.method.toLowerCase()].parameters[0];
@@ -278,11 +297,11 @@ exports.build_api_object = function(content){
             body.password = body.password || content.password;
         }
 
-        content.api_object = {"body":body, "type":schema_parts[1].toLowerCase(), "api_id":content.api_id, "version_id":content.version_id,
-                              "client_id":content.client_id, "active":true, "resource":content.resource};
+        /*content.api_object = {"body":body, "type":schema_parts[1].toLowerCase(), "api_id":content.api_id, "version_id":content.version_id,
+                              "client_id":content.client_id, "active":true, "resource":content.resource};*/
 
         content.api_object = {"body":body, "type":schema_parts[1].toLowerCase(), "api_id":content.api_id, "version_id":content.version_id,
-                              "client_id":content.client_id, "active":true, "resource":content.resource};
+                              "client_id":content.client_id, "active":true, "resource":content.resource, "access_control_policy":content.access_control_policy || {}};
 
         if(content.user_id){
             content.api_object.user_id = content.user_id;
@@ -306,7 +325,7 @@ exports.validate_swagger_spec = function(content){
     return new Promise(function(resolve) {
         // validate swagger
 
-        console.log(content.results);
+        //console.log(content.results);
 
         if(content.results.length == 0){
             throw new exceptions.HeaderException('no available definition for version: '+content.version_name);
