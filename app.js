@@ -318,8 +318,9 @@ app.get('/:version_name/:plurality/:resource_id', function (request, response) {
 		})
 		.then(function(content){
 			return new Promise(function(resolve) {
-				console.log({"version_id":content.version_id, "body._id":content.resource_id, "active":true, "client_id":content.client_id, "resource":content.resource});
-				content.query = {"version_id":content.version_id, "body._id":content.resource_id, "active":true, "client_id":content.client_id, "resource":content.resource};
+				//console.log({"version_id":content.version_id, "body._id":content.resource_id, "active":true, "client_id":content.client_id, "resource":content.resource});
+				content.query = {"version_id":content.version_id, "body._id":content.resource_id, "active":true, "client_id":content.client_id, "resource":content.resource, "access_control_policy.access_control_list.id":content.user_id, "access_control_policy.access_control_list.type":"user", "access_control_policy.access_control_list.permissions":"read"};
+				//content.query = {"resource":content.resource, "active":true, "client_id":content.client_id, "access_control_policy.access_control_list.id":content.user_id, "access_control_policy.access_control_list.type":"user", "access_control_policy.access_control_list.permissions":"read"};
 				resolve(content);
 			});
 		})
@@ -330,7 +331,7 @@ app.get('/:version_name/:plurality/:resource_id', function (request, response) {
 				console.log(content.results);
 
 				if(content.results.length == 0){
-					throw new exceptions.ObjectException('retrieval error');
+					throw new exceptions.ObjectException('could not find resource id');
 					//content.payload = {};
 				}else{
 					content.payload = content.results[0].body;
