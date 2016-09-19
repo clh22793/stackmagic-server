@@ -24,8 +24,6 @@ MongoClient.connect(db_config[config.environment].db, function(err, db) {
 exports.get_api_key = function(content){
     return new Promise(function(resolve) {
         var authorization = content.request.headers['authorization'];
-        console.log('validating');
-        console.log(authorization);
         var authorization_parts = authorization.split(' ');
 
         if(authorization_parts[0].toLowerCase() == 'basic'){
@@ -40,7 +38,6 @@ exports.get_api_key = function(content){
             console.log(err);
 
             content.api_keys = docs;
-            console.log(content);
             resolve(content);
         });
     });
@@ -49,11 +46,11 @@ exports.get_api_key = function(content){
 exports.validate_api_key = function(content){
     return new Promise(function(resolve) {
         if(!content.api_keys[0]){
-            throw new HeaderException('invalid api key');
+            throw new exceptions.HeaderException('invalid api key');
         }else{
             //content.spec = JSON.parse(content.swagger);
-            content.client_id = content.api_keys[0].client_id;
-            content.api_id = content.api_keys[0].api_id;
+            content.client_id = content.api_keys[0].client_id || null;
+            content.api_id = content.api_keys[0].api_id || null;
             content.user_id = content.api_keys[0].user_id || null;
             resolve(content);
         }
@@ -183,7 +180,7 @@ exports.get_deployment = function(content){
     // get swagger for this version
 
     return new Promise(function(resolve) {
-        var cursor =state.db.collection('deployments').find({"environment":config.environment, "version_name":content.version_name, "active":true}).toArray(function(err, results){
+        var cursor =state.db.collection('deployments').find({"environment":config.environment, "version_name":content.version_name, "api_id":content.api_id, "active":true}).toArray(function(err, results){
             console.log(err);
 
             content.results = results;
@@ -193,11 +190,11 @@ exports.get_deployment = function(content){
 };
 
 exports.get_resource = function(content){
+    console.log({"plurality":content.plurality, "version_id":content.version_id, "active":true});
     return new Promise(function(resolve) {
         var cursor =state.db.collection('resources').find({"plurality":content.plurality, "version_id":content.version_id, "active":true}).toArray(function(err, results){
             console.log(err);
 
-            console.log(results);
             content.results = results;
             resolve(content);
         });
