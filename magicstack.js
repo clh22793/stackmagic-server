@@ -291,7 +291,10 @@ exports.build_api_object = function(content){
             body._type = schema_parts[1].toLowerCase();
             body._resource = schema_parts[1].toLowerCase();
             body._id = content.resource_id;
-            body.password = body.password || content.password;
+            //body.password = body.password || content.password;
+            if(content.password){
+                body.password = content.password;
+            }
         }
 
         /*content.api_object = {"body":body, "type":schema_parts[1].toLowerCase(), "api_id":content.api_id, "version_id":content.version_id,

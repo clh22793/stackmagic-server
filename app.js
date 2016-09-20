@@ -54,6 +54,8 @@ app.delete('/:version_name/users/:resource_id', require('./routes/users.js'));
 app.post('/:version_name/:plurality', require('./routes/blank.js'));
 app.get('/:version_name/:plurality', require('./routes/blank.js'));
 app.get('/:version_name/:plurality/:resource_id', require('./routes/blank.js'));
+app.put('/:version_name/:plurality/:resource_id', require('./routes/blank.js'));
+app.delete('/:version_name/:plurality/:resource_id', require('./routes/blank.js'));
 
 // oauth methods
 app.post('/:version_name/oauth2/token', require('./routes/oauth.js'));

@@ -22,3 +22,23 @@ exports.hash = function(algorithm, value){
 
     return hash;
 };
+
+
+/**
+ @ access_control_policy = acp of object
+ @user_id = user id
+ @permission = read | write
+
+ returns true | false
+*/
+exports.user_has_permissions = function(access_control_policy, user_id, permission){
+    var acl = access_control_policy.access_control_list;
+
+    for(var i=0; i < acl.length; i++){
+        if(acl[i].id == user_id && acl[i].permissions.indexOf(permission) !== -1){
+            return true;
+        }
+    }
+
+    return false;
+};
