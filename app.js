@@ -58,6 +58,7 @@ app.put('/:version_name/:plurality/:resource_id', require('./routes/blank.js'));
 app.delete('/:version_name/:plurality/:resource_id', require('./routes/blank.js'));
 
 app.post('/:version_name/:parent/:resource_id/:plurality', require('./routes/blank.js'));
+app.get('/:version_name/:parent/:resource_id/:plurality', require('./routes/blank.js'));
 
 
 // oauth methods

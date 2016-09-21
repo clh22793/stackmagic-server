@@ -237,7 +237,7 @@ exports.build_api_object = function(content){
         console.log(request.body);
 
         if(!spec.paths[content.path]){
-            throw new exceptions.ObjectException("invalid path: "+content.path);
+            throw new exceptions.ObjectException("path not supported: "+content.path);
         }
 
         console.log('build api object');

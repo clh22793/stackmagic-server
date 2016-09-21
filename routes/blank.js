@@ -386,4 +386,82 @@ router.post('/:version_name/:parent/:resource_id/:plurality', function (request,
 		});
 });
 
+router.get('/:version_name/:parent/:resource_id/:plurality', function (request, response) {
+  	var content = {};
+	content.version_name = request.params.version_name;
+	content.request = request;
+	content.plurality = request.params.plurality;
+	content.parent = request.params.parent;
+	content.resource_id = request.params.resource_id;
+
+	//content.resource = 'user'; // GET THIS DYNAMICALLY!
+	//content.path = 'users'; // GET THIS DYNAMICALLY!
+
+	magicstack.get_api_key(content)
+		.then(magicstack.validate_api_key)
+		.then(magicstack.get_deployment)
+		.then(magicstack.validate_swagger_spec)
+		.then(magicstack.get_parent_resource)
+		.then(function(content){
+		    return new Promise(function(resolve){
+		        if(content.results.length == 0){
+		            throw new exceptions.ObjectException('could not find parent resource');
+		        }else{
+		            content.parent_resource = content.results[0].name.toLowerCase();
+		        }
+		        resolve(content);
+		    });
+		})
+		.then(magicstack.get_resource)
+		.then(function(content){ // dynamically assign content.resource, content.path
+			return new Promise(function(resolve){
+				if(content.results.length == 0){
+					throw new exceptions.ObjectException('could not find resource');
+				}else{
+					content.resource = content.results[0].name.toLowerCase();
+					content.path = content.parent+"/{"+content.parent_resource+"_id}/"+content.plurality;
+				}
+
+				resolve(content);
+			});
+		})
+		.then(function(content){
+			return new Promise(function(resolve) {
+				content.query = {"resource":content.resource, "active":true, "client_id":content.client_id, "access_control_policy.access_control_list.id":content.user_id, "access_control_policy.access_control_list.type":"user", "access_control_policy.access_control_list.permissions":"read"};
+				console.log(content.query);
+				resolve(content);
+			});
+		})
+		.then(magicstack.get_api_objects)
+		.then(function(content){
+			return new Promise(function(resolve) {
+				console.log('RESULTS');
+				console.log(content.results);
+
+				var payload = [];
+				for(var i=0; i < content.results.length; i++){
+					payload.push(content.results[i].body);
+				};
+
+				content.payload = payload;
+				// delete passwords from content.payload
+				for(var i=0; i < content.payload.length; i++){
+					delete content.payload[i].password;
+				}
+
+				console.log(content.payload);
+
+				resolve(content);
+			});
+		})
+		.then(function(content){
+			response.send(content.payload);
+		})
+		.catch(function(err){
+			console.trace();
+			console.log(err);
+			response.send({"error_code":err.code, "error_message":err.message});
+		});
+});
+
 module.exports = router;
