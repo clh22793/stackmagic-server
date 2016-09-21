@@ -201,6 +201,18 @@ exports.get_resource = function(content){
     });
 }
 
+exports.get_parent_resource = function(content){
+    console.log({"plurality":content.parent, "version_id":content.version_id, "active":true});
+    return new Promise(function(resolve) {
+        var cursor =state.db.collection('resources').find({"plurality":content.parent, "version_id":content.version_id, "active":true}).toArray(function(err, results){
+            console.log(err);
+
+            content.results = results;
+            resolve(content);
+        });
+    });
+}
+
 exports.get_api_objects = function(content){
     return new Promise(function(resolve) {
         var cursor =state.db.collection('api_objects').find(content.query).toArray(function(err, results){

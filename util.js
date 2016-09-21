@@ -23,7 +23,6 @@ exports.hash = function(algorithm, value){
     return hash;
 };
 
-
 /**
  @ access_control_policy = acp of object
  @user_id = user id
