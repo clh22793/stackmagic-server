@@ -372,8 +372,13 @@ router.post('/:version_name/:parent/:resource_id/:plurality', function (request,
 			});
 
 		})
-		//.then(magicstack.get_user_by_api)
-		//.then(magicstack.validate_user_uniqueness)
+		.then(function(content){
+			return new Promise(function(resolve){ // insert derived values; bypass swagger defined read_only param attributes
+				content.request.body.derived = {};
+				content.request.body.derived["list_id"] = content.resource_id;
+				resolve(content);
+			});
+		})
 		.then(magicstack.build_api_object)
 		.then(magicstack.insert_api_object)
 		.then(function(content){

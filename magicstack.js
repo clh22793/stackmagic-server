@@ -262,7 +262,9 @@ exports.build_api_object = function(content){
 
             // build payload
             for(var key in properties){
-                if(properties[key].readOnly == true){
+                if(request.body.derived[key]){ // parameters that are read only, but derived during the post or put request (ie: child resources need to be linked to parent resources through parent resource id that appears only in url parameter)
+                    body[key] = request.body.derived[key];
+                }else if(properties[key].readOnly == true){
                     continue;
                 }else if(request.body[key]){
                     if(schema_parts[1].toLowerCase() == 'user' && key.toLowerCase() == 'password'){
