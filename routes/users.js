@@ -23,6 +23,13 @@ router.post('/:version_name/users', function (request, response) {
 		.then(magicstack.validate_swagger_spec)
 		.then(magicstack.get_user_by_api) // only for user resource
 		.then(magicstack.validate_user_uniqueness) // only for user resource
+		.then(function(content){ // set access control policy
+			return new Promise(function(resolve){
+				content.access_control_policy = {"owner":{"type":"client", "id":content.user_id}, "access_control_list":[{"type":"user", "id":content.user_id, "permissions":["read","write"]}]};
+				resolve(content);
+			});
+
+		})
 		.then(magicstack.build_api_object)
 		.then(magicstack.insert_api_object)
 		.then(function(content){

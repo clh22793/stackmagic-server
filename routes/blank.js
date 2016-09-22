@@ -36,14 +36,10 @@ router.post('/:version_name/:plurality', function (request, response) {
 		})
 		.then(function(content){ // set access control policy
 			return new Promise(function(resolve){
-				content.access_control_policy = {"owner":content.user_id, "access_control_list":[{"type":"user", "id":content.user_id, "permissions":["read","write"]}]};
-
+				content.access_control_policy = {"owner":{"type":"user", "id":content.user_id}, "access_control_list":[{"type":"user", "id":content.user_id, "permissions":["read","write"]}]};
 				resolve(content);
 			});
-
 		})
-		//.then(magicstack.get_user_by_api)
-		//.then(magicstack.validate_user_uniqueness)
 		.then(magicstack.build_api_object)
 		.then(magicstack.insert_api_object)
 		.then(function(content){
@@ -366,11 +362,9 @@ router.post('/:version_name/:parent/:resource_id/:plurality', function (request,
 		})
 		.then(function(content){ // set access control policy
 			return new Promise(function(resolve){
-				content.access_control_policy = {"owner":content.user_id, "access_control_list":[{"type":"user", "id":content.user_id, "permissions":["read","write"]}]};
-
+				content.access_control_policy = {"owner":{"type":"user", "id":content.user_id}, "access_control_list":[{"type":"user", "id":content.user_id, "permissions":["read","write"]}]};
 				resolve(content);
 			});
-
 		})
 		.then(function(content){
 			return new Promise(function(resolve){ // insert derived values; bypass swagger defined read_only param attributes
