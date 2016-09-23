@@ -14,13 +14,28 @@ router.post('/:version_name/users', function (request, response) {
 	var content = {};
 	content.version_name = version_name;
 	content.request = request;
-	content.resource = 'user';
-	content.path = 'users';
+	content.plurality = "users";
+	//content.resource = 'user';
+	//content.path = 'users';
 
 	magicstack.get_api_key(content)
 		.then(magicstack.validate_api_key)
 		.then(magicstack.get_deployment)
 		.then(magicstack.validate_swagger_spec)
+		.then(magicstack.get_resource)
+		.then(function(content){ // dynamically assign content.resource, content.path
+			return new Promise(function(resolve){
+				if(content.results.length == 0){
+					throw new exceptions.ObjectException('could not find resource');
+				}else{
+					content.resource_id = content.results[0].id;
+					content.resource = content.results[0].name.toLowerCase();
+					content.path = content.plurality;
+				}
+
+				resolve(content);
+			});
+		})
 		.then(magicstack.get_user_by_api) // only for user resource
 		.then(magicstack.validate_user_uniqueness) // only for user resource
 		.then(function(content){ // set access control policy

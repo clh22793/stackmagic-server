@@ -27,6 +27,7 @@ router.post('/:version_name/:plurality', function (request, response) {
 				if(content.results.length == 0){
 					throw new exceptions.ObjectException('could not find resource');
 				}else{
+					content.resource_id = content.results[0].id;
 					content.resource = content.results[0].name.toLowerCase();
 					content.path = content.plurality;
 				}
@@ -353,6 +354,7 @@ router.post('/:version_name/:parent/:resource_id/:plurality', function (request,
 				if(content.results.length == 0){
 					throw new exceptions.ObjectException('could not find resource');
 				}else{
+					content.resource_id = content.results[0].id;
 					content.resource = content.results[0].name.toLowerCase();
 					content.path = content.parent+"/{"+content.parent_resource+"_id}/"+content.plurality;
 				}

@@ -315,7 +315,8 @@ exports.build_api_object = function(content){
                               "client_id":content.client_id, "active":true, "resource":content.resource};*/
 
         content.api_object = {"body":body, "type":schema_parts[1].toLowerCase(), "api_id":content.api_id, "version_id":content.version_id,
-                              "client_id":content.client_id, "active":true, "resource":content.resource, "access_control_policy":content.access_control_policy || {}};
+                              "client_id":content.client_id, "active":true, "resource":content.resource, "resource_id":content.resource_id,
+                              "access_control_policy":content.access_control_policy || {}};
 
         if(content.user_id){
             content.api_object.user_id = content.user_id;
