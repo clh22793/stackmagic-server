@@ -2,10 +2,11 @@
 var Promise = require('bluebird');
 var MongoClient = Promise.promisifyAll(require('mongodb')).MongoClient;
 var uuid = require('node-uuid');
+require('dotenv').config();
 
 // internal requires
-var config = require('./config/magicstack.json');
-var db_config = require('./config/db.json');
+//var config = require('./config/magicstack.json');
+//var db_config = require('./config/db.json');
 var util = require('./util.js');
 var exceptions = require('./exceptions.js');
 
@@ -13,7 +14,7 @@ var state = {
   db: null
 };
 
-MongoClient.connect(db_config[config.environment].db, function(err, db) {
+MongoClient.connect("mongodb://"+process.env.DB_USER+":"+process.env.DB_PASSWORD+"@"+process.env.DB_HOST+"/"+process.env.DB_NAME+"?authMechanism=SCRAM-SHA-1", function(err, db) {
   if (err) {
     throw err;
   }else{
@@ -183,7 +184,7 @@ exports.get_deployment = function(content){
     // get swagger for this version
 
     return new Promise(function(resolve) {
-        var cursor =state.db.collection('deployments').find({"environment":config.environment, "version_name":content.version_name, "api_id":content.api_id, "active":true}).toArray(function(err, results){
+        var cursor =state.db.collection('deployments').find({"environment":process.env.ENVIRONMENT, "version_name":content.version_name, "api_id":content.api_id, "active":true}).toArray(function(err, results){
             console.log(err);
 
             content.results = results;
