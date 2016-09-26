@@ -1,6 +1,7 @@
 // external requires
 var express = require('express');
 var router = express.Router();
+var bcrypt = require('bcrypt');
 
 // internal requires
 var magicstack = require('../magicstack.js');
@@ -24,10 +25,23 @@ router.post('/:version_name/oauth2/token', function (request, response) {
 		.then(magicstack.validate_swagger_spec)
 		.then(magicstack.authenticate_user)
 		.then(function(content){
-			return new Promise(function(resolve) {
+			return new Promise(function(resolve){
 				if(content.results.length == 0){
 					throw new exceptions.ObjectException('invalid credentials');
-				}else{
+				}
+
+				if(!bcrypt.compareSync(content.password, content.results[0].body.password)){
+					throw new exceptions.ObjectException('invalid credentials');
+				}
+
+				resolve(content);
+			});
+		})
+		.then(function(content){
+			return new Promise(function(resolve) {
+				//if(content.results.length == 0){
+				//	throw new exceptions.ObjectException('invalid credentials');
+				//}else{
 					//content.payload = content.results[0].body;
 					var object = {};
 					object.api_id = content.api_id;
@@ -38,9 +52,10 @@ router.post('/:version_name/oauth2/token', function (request, response) {
 					object.body = {};
 					object.body._created = new Date().toISOString();
 					object.body.access_token = util.generate_oauth_token();
+					object.body.user_id = content.results[0].body._id;
 
 					content.oauth_record = object;
-				}
+				//}
 
 				resolve(content);
 			});

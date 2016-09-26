@@ -1,8 +1,13 @@
 var crypto = require('crypto');
+var bcrypt = require('bcrypt');
 var uuid = require('node-uuid');
 
+const SALT_ROUNDS = 10;
+
 exports.encrypt_password = function(password){
-    return crypto.createHash('sha1').update(password).digest("hex");
+    //var sha_hash = crypto.createHash('sha256').update(password).digest("hex");
+    return bcrypt.hashSync(password, SALT_ROUNDS);
+    //return crypto.createHash('sha1').update(password).digest("hex");
 };
 
 exports.generate_oauth_token = function(){

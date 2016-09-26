@@ -105,7 +105,10 @@ exports.get_user_by_api = function(content){
 
 exports.authenticate_user = function(content){
     return new Promise(function(resolve) {
-        var cursor =state.db.collection('api_objects').find({"body.username": content.username, "body.password": util.encrypt_password(content.password), "active": true}).toArray(function(err, docs){
+        console.log(content.password);
+        console.log(util.encrypt_password(content.password));
+
+        var cursor =state.db.collection('api_objects').find({"body.username": content.username, /*"body.password": util.encrypt_password(content.password),*/ "active": true}).toArray(function(err, docs){
             console.log(err);
             content.results = docs;
             resolve(content);

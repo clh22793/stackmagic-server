@@ -48,6 +48,7 @@ router.post('/:version_name/users', function (request, response) {
 		.then(magicstack.build_api_object)
 		.then(magicstack.insert_api_object)
 		.then(function(content){
+			delete content.api_object.body.password;
 			response.send(content.api_object.body);
 		})
 		.catch(function(err){
