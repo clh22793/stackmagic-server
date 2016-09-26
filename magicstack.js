@@ -75,10 +75,25 @@ exports.insert_api_object = function(content){
         var cursor = state.db.collection('api_objects').insertOne(content.api_object, function(err, result){
             console.log(err);
             content.insert_result = result;
-            console.log('result');
-            console.log(result);
             resolve(content);
         });
+    });
+};
+
+exports.save_request = function(request, start_time, owner){
+    var obj = {};
+    obj.created = new Date().toISOString();
+    obj.baseUrl = request.baseUrl;
+    obj.method = request.method;
+    obj.headers = request.headers;
+    obj.body = request.body;
+    obj.query = request.query;
+    obj.route = request.route;
+    obj.path = request.path;
+
+    var cursor = state.db.collection('api_requests').insertOne({"request":obj, "total time (ms)":parseInt(Date.now() - start_time), "owner":owner}, function(err, result){
+        console.log(err);
+
     });
 };
 
@@ -87,8 +102,7 @@ exports.delete_api_object = function(content){
         var cursor = state.db.collection('api_objects').updateMany({"body._id":content.resource_id,"client_id":content.client_id},{$set: { "active": false},$currentDate: { "lastModified": true }}, function(err, result){
             console.log(err);
             content.insert_result = result;
-            console.log('result');
-            console.log(result);
+
             resolve(content);
         });
     });
@@ -106,8 +120,6 @@ exports.get_user_by_api = function(content){
 
 exports.authenticate_user = function(content){
     return new Promise(function(resolve) {
-        console.log(content.password);
-        console.log(util.encrypt_password(content.password));
 
         var cursor =state.db.collection('api_objects').find({"body.username": content.username, /*"body.password": util.encrypt_password(content.password),*/ "active": true}).toArray(function(err, docs){
             console.log(err);
@@ -330,8 +342,6 @@ exports.build_api_object = function(content){
 };
 
 var validate_headers = function(headers, name, value){
-	console.log(headers);
-
 	if(headers[name] !== value){
 		throw new exceptions.HeaderException('invalid headers');
 	}
@@ -343,8 +353,6 @@ exports.validate_swagger_spec = function(content){
 
     return new Promise(function(resolve) {
         // validate swagger
-
-        //console.log(content.results);
 
         if(content.results.length == 0){
             throw new exceptions.HeaderException('no available definition for version: '+content.version_name);

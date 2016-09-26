@@ -60,9 +60,9 @@ app.delete('/:version_name/:plurality/:resource_id', require('./routes/blank.js'
 app.post('/:version_name/:parent/:resource_id/:plurality', require('./routes/blank.js'));
 app.get('/:version_name/:parent/:resource_id/:plurality', require('./routes/blank.js'));
 
-
 // oauth methods
 app.post('/:version_name/oauth2/token', require('./routes/oauth.js'));
+
 
 app.listen(3000, function () {
   console.log('Example app listening on port 3000!');

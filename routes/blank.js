@@ -9,13 +9,12 @@ var util = require('../util.js');
 var exceptions = require('../exceptions.js');
 
 router.post('/:version_name/:plurality', function (request, response) {
+	var start_time = Date.now();
+
   	var content = {};
 	content.version_name = request.params.version_name;
 	content.request = request;
 	content.plurality = request.params.plurality;
-
-	//content.resource = 'user'; // GET THIS DYNAMICALLY!
-	//content.path = 'users'; // GET THIS DYNAMICALLY!
 
 	magicstack.get_api_key(content)
 		.then(magicstack.validate_api_key)
@@ -44,6 +43,7 @@ router.post('/:version_name/:plurality', function (request, response) {
 		.then(magicstack.build_api_object)
 		.then(magicstack.insert_api_object)
 		.then(function(content){
+			magicstack.save_request(request, start_time, {"type":"user", "id":content.user_id});
 			response.send(content.api_object.body);
 		})
 		.catch(function(err){
@@ -54,13 +54,12 @@ router.post('/:version_name/:plurality', function (request, response) {
 });
 
 router.get('/:version_name/:plurality', function (request, response) {
+	var start_time = Date.now();
+
   	var content = {};
 	content.version_name = request.params.version_name;
 	content.request = request;
 	content.plurality = request.params.plurality;
-
-	//content.resource = 'user';
-	//content.path = 'users';
 
 	magicstack.get_api_key(content)
 		.then(magicstack.validate_api_key)
@@ -82,16 +81,13 @@ router.get('/:version_name/:plurality', function (request, response) {
 		.then(function(content){
 			return new Promise(function(resolve) {
 				content.query = {"resource":content.resource, "active":true, "client_id":content.client_id, "access_control_policy.access_control_list.id":content.user_id, "access_control_policy.access_control_list.type":"user", "access_control_policy.access_control_list.permissions":"read"};
-				console.log(content.query);
+				//console.log(content.query);
 				resolve(content);
 			});
 		})
 		.then(magicstack.get_api_objects)
 		.then(function(content){
 			return new Promise(function(resolve) {
-				console.log('RESULTS');
-				console.log(content.results);
-
 				var payload = [];
 				for(var i=0; i < content.results.length; i++){
 					payload.push(content.results[i].body);
@@ -103,12 +99,11 @@ router.get('/:version_name/:plurality', function (request, response) {
 					delete content.payload[i].password;
 				}
 
-				console.log(content.payload);
-
 				resolve(content);
 			});
 		})
 		.then(function(content){
+			magicstack.save_request(request, start_time, {"type":"user", "id":content.user_id});
 			response.send(content.payload);
 		})
 		.catch(function(err){
@@ -119,6 +114,8 @@ router.get('/:version_name/:plurality', function (request, response) {
 });
 
 router.get('/:version_name/:plurality/:resource_id', function (request, response) {
+	var start_time = Date.now();
+
   	var content = {};
 	content.request = request;
 	content.version_name = request.params.version_name;
@@ -160,9 +157,6 @@ router.get('/:version_name/:plurality/:resource_id', function (request, response
 		.then(magicstack.get_api_objects)
 		.then(function(content){
 			return new Promise(function(resolve) {
-				console.log('RESULTS');
-				console.log(content.results);
-
 				if(content.results.length == 0){
 					throw new exceptions.ObjectException('could not find resource id');
 					//content.payload = {};
@@ -171,13 +165,13 @@ router.get('/:version_name/:plurality/:resource_id', function (request, response
 
 					// delete password from content.payload
 					delete content.payload.password;
-					console.log(content.payload);
 				}
 
 				resolve(content);
 			});
 		})
 		.then(function(content){
+			magicstack.save_request(request, start_time, {"type":"user", "id":content.user_id});
 			response.send(content.payload);
 		})
 		.catch(function(err){
@@ -188,16 +182,13 @@ router.get('/:version_name/:plurality/:resource_id', function (request, response
 });
 
 router.put('/:version_name/:plurality/:resource_id', function (request, response) {
-  	var version_name = request.params.version_name;
-  	var resource_id = request.params.resource_id;
+  	var start_time = Date.now();
 
 	var content = {};
-	content.version_name = version_name;
+	content.version_name = request.params.version_name;
 	content.request = request;
 	content.plurality = request.params.plurality;
-	//content.resource = 'user';
-	//content.path = 'users/{user_id}';
-	content.resource_id = resource_id;
+	content.resource_id = request.params.resource_id;
 
 	magicstack.get_api_key(content)
 		.then(magicstack.validate_api_key)
@@ -258,7 +249,7 @@ router.put('/:version_name/:plurality/:resource_id', function (request, response
 			});
 		})
 		.then(function(content){
-			//response.send(content.api_object.body);
+			magicstack.save_request(request, start_time, {"type":"user", "id":content.user_id});
 			response.send(content.payload);
 		})
 		.catch(function(err){
@@ -269,14 +260,13 @@ router.put('/:version_name/:plurality/:resource_id', function (request, response
 });
 
 router.delete('/:version_name/:plurality/:resource_id', function (request, response) {
-  	var version_name = request.params.version_name;
-  	var resource_id = request.params.resource_id;
+  	var start_time = Date.now();
 
 	var content = {};
-	content.version_name = version_name;
+	content.version_name = request.params.version_name;
 	content.request = request;
 	content.plurality = request.params.plurality;
-	content.resource_id = resource_id;
+	content.resource_id = request.params.resource_id;
 
 	magicstack.get_api_key(content)
 		.then(magicstack.validate_api_key)
@@ -313,6 +303,7 @@ router.delete('/:version_name/:plurality/:resource_id', function (request, respo
 		})
 		.then(magicstack.delete_api_object)
 		.then(function(content){
+			magicstack.save_request(request, start_time, {"type":"user", "id":content.user_id});
 			response.send({});
 		})
 		.catch(function(err){
@@ -323,15 +314,14 @@ router.delete('/:version_name/:plurality/:resource_id', function (request, respo
 });
 
 router.post('/:version_name/:parent/:resource_id/:plurality', function (request, response) {
+  	var start_time = Date.now();
+
   	var content = {};
 	content.version_name = request.params.version_name;
 	content.request = request;
 	content.plurality = request.params.plurality;
 	content.parent = request.params.parent;
 	content.resource_id = request.params.resource_id;
-
-	//content.resource = 'user'; // GET THIS DYNAMICALLY!
-	//content.path = 'users'; // GET THIS DYNAMICALLY!
 
 	magicstack.get_api_key(content)
 		.then(magicstack.validate_api_key)
@@ -378,6 +368,7 @@ router.post('/:version_name/:parent/:resource_id/:plurality', function (request,
 		.then(magicstack.build_api_object)
 		.then(magicstack.insert_api_object)
 		.then(function(content){
+			magicstack.save_request(request, start_time, {"type":"user", "id":content.user_id});
 			response.send(content.api_object.body);
 		})
 		.catch(function(err){
@@ -429,16 +420,13 @@ router.get('/:version_name/:parent/:resource_id/:plurality', function (request, 
 		.then(function(content){
 			return new Promise(function(resolve) {
 				content.query = {"resource":content.resource, "active":true, "client_id":content.client_id, "access_control_policy.access_control_list.id":content.user_id, "access_control_policy.access_control_list.type":"user", "access_control_policy.access_control_list.permissions":"read"};
-				console.log(content.query);
+				//console.log(content.query);
 				resolve(content);
 			});
 		})
 		.then(magicstack.get_api_objects)
 		.then(function(content){
 			return new Promise(function(resolve) {
-				console.log('RESULTS');
-				console.log(content.results);
-
 				var payload = [];
 				for(var i=0; i < content.results.length; i++){
 					payload.push(content.results[i].body);
@@ -450,12 +438,11 @@ router.get('/:version_name/:parent/:resource_id/:plurality', function (request, 
 					delete content.payload[i].password;
 				}
 
-				console.log(content.payload);
-
 				resolve(content);
 			});
 		})
 		.then(function(content){
+			magicstack.save_request(request, start_time, {"type":"user", "id":content.user_id});
 			response.send(content.payload);
 		})
 		.catch(function(err){
