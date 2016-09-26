@@ -7,7 +7,7 @@ var app = express();
 // internal requires
 var magicstack = require('./magicstack.js');
 var util = require('./util.js');
-var config = require('./config/magicstack.json');
+//var config = require('./config/magicstack.json');
 var exceptions = require('./exceptions.js');
 
 var users = require('./routes/users.js');

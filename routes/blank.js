@@ -5,7 +5,7 @@ var router = express.Router();
 // internal requires
 var magicstack = require('../magicstack.js');
 var util = require('../util.js');
-var config = require('../config/magicstack.json');
+//var config = require('../config/magicstack.json');
 var exceptions = require('../exceptions.js');
 
 router.post('/:version_name/:plurality', function (request, response) {

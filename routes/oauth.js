@@ -6,7 +6,7 @@ var bcrypt = require('bcrypt');
 // internal requires
 var magicstack = require('../magicstack.js');
 var util = require('../util.js');
-var config = require('../config/magicstack.json');
+//var config = require('../config/magicstack.json');
 var exceptions = require('../exceptions.js');
 
 router.post('/:version_name/oauth2/token', function (request, response) {
