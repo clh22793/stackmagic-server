@@ -80,8 +80,8 @@ router.get('/:version_name/:plurality', function (request, response) {
 		})
 		.then(function(content){
 			return new Promise(function(resolve) {
-				content.query = {"resource":content.resource, "active":true, "client_id":content.client_id, "access_control_policy.access_control_list.id":content.user_id, "access_control_policy.access_control_list.type":"user", "access_control_policy.access_control_list.permissions":"read"};
-				//console.log(content.query);
+				content.query = {"version_id":content.version_id, "resource":content.resource, "active":true, "client_id":content.client_id, "access_control_policy.access_control_list.id":content.user_id, "access_control_policy.access_control_list.type":"user", "access_control_policy.access_control_list.permissions":"read"};
+				console.log(content.query);
 				resolve(content);
 			});
 		})
@@ -151,6 +151,7 @@ router.get('/:version_name/:plurality/:resource_id', function (request, response
 		.then(function(content){
 			return new Promise(function(resolve) {
 				content.query = {"version_id":content.version_id, "body._id":content.resource_id, "active":true, "client_id":content.client_id, "resource":content.resource, "access_control_policy.access_control_list.id":content.user_id, "access_control_policy.access_control_list.type":"user", "access_control_policy.access_control_list.permissions":"read"};
+				console.log(content.query);
 				resolve(content);
 			});
 		})

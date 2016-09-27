@@ -9,6 +9,7 @@ var util = require('../util.js');
 var exceptions = require('../exceptions.js');
 
 router.post('/:version_name/users', function (request, response) {
+	var start_time = Date.now();
   	var version_name = request.params.version_name;
 
 	var content = {};
@@ -49,6 +50,7 @@ router.post('/:version_name/users', function (request, response) {
 		.then(magicstack.insert_api_object)
 		.then(function(content){
 			delete content.api_object.body.password;
+			magicstack.save_request(request, start_time, {"type":"client", "id":content.client_id});
 			response.send(content.api_object.body);
 		})
 		.catch(function(err){
@@ -59,6 +61,8 @@ router.post('/:version_name/users', function (request, response) {
 });
 
 router.get('/:version_name/users', function (request, response) {
+	var start_time = Date.now();
+
 	var content = {};
 	content.version_name = request.params.version_name;
 	content.request = request;
@@ -98,6 +102,7 @@ router.get('/:version_name/users', function (request, response) {
 			});
 		})
 		.then(function(content){
+			magicstack.save_request(request, start_time, {"type":"client", "id":content.client_id});
 			response.send(content.payload);
 		})
 		.catch(function(err){
@@ -108,15 +113,17 @@ router.get('/:version_name/users', function (request, response) {
 });
 
 router.get('/:version_name/users/:resource_id', function (request, response) {
-  	var version_name = request.params.version_name;
-  	var resource_id = request.params.resource_id;
+  	var start_time = Date.now();
+
+  	//var version_name = request.params.version_name;
+  	//var resource_id = request.params.resource_id;
 
 	var content = {};
-	content.version_name = version_name;
+	content.version_name = request.params.version_name;
 	content.request = request;
 	content.resource = 'user';
 	content.path = 'users/{user_id}';
-	content.resource_id = resource_id;
+	content.resource_id = request.params.resource_id;
 
 	magicstack.get_api_key(content)
 		.then(magicstack.validate_api_key)
@@ -149,6 +156,7 @@ router.get('/:version_name/users/:resource_id', function (request, response) {
 			});
 		})
 		.then(function(content){
+			magicstack.save_request(request, start_time, {"type":"client", "id":content.client_id});
 			response.send(content.payload);
 		})
 		.catch(function(err){
@@ -159,15 +167,16 @@ router.get('/:version_name/users/:resource_id', function (request, response) {
 });
 
 router.put('/:version_name/users/:resource_id', function (request, response) {
-  	var version_name = request.params.version_name;
-  	var resource_id = request.params.resource_id;
+  	var start_time = Date.now();
+  	//var version_name = request.params.version_name;
+  	//var resource_id = request.params.resource_id;
 
 	var content = {};
-	content.version_name = version_name;
+	content.version_name = request.params.version_name;
 	content.request = request;
 	content.resource = 'user';
 	content.path = 'users/{user_id}';
-	content.resource_id = resource_id;
+	content.resource_id = request.params.resource_id;
 
 	magicstack.get_api_key(content)
 		.then(magicstack.validate_api_key)
@@ -206,6 +215,7 @@ router.put('/:version_name/users/:resource_id', function (request, response) {
 		})
 		.then(function(content){
 			//response.send(content.api_object.body);
+			magicstack.save_request(request, start_time, {"type":"client", "id":content.client_id});
 			response.send(content.payload);
 		})
 		.catch(function(err){
@@ -216,15 +226,16 @@ router.put('/:version_name/users/:resource_id', function (request, response) {
 });
 
 router.delete('/:version_name/users/:resource_id', function (request, response) {
-  	var version_name = request.params.version_name;
-  	var resource_id = request.params.resource_id;
+  	var start_time = Date.now();
+  	//var version_name = request.params.version_name;
+  	//var resource_id = request.params.resource_id;
 
 	var content = {};
-	content.version_name = version_name;
+	content.version_name = request.params.version_name;
 	content.request = request;
 	content.resource = 'user';
 	content.path = 'users/{user_id}';
-	content.resource_id = resource_id;
+	content.resource_id = request.params.resource_id;
 
 	magicstack.get_api_key(content)
 		.then(magicstack.validate_api_key)
@@ -232,6 +243,7 @@ router.delete('/:version_name/users/:resource_id', function (request, response) 
 		.then(magicstack.validate_swagger_spec)
 		.then(magicstack.delete_api_object)
 		.then(function(content){
+			magicstack.save_request(request, start_time, {"type":"client", "id":content.client_id});
 			response.send({});
 		})
 		.catch(function(err){

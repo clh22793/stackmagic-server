@@ -22,6 +22,13 @@ MongoClient.connect("mongodb://"+process.env.DB_USER+":"+process.env.DB_PASSWORD
   }
 });
 
+//"version_id": "be5e86312e3b5555a7b7bf5759c3344121fb840b","body._id": "33ad0efc67adfc54c573578238dd2988057b65a6","active": true,"client_id": "c817459c9e546d447e2dde4bcafde76f","resource": "list","access_control_policy.access_control_list.id": "787adc99458c8179ce8cf57ab706d0b2e469404a","access_control_policy.access_control_list.type": "user","access_control_policy.access_control_list.permissions": "read"
+
+//"version_id": "be5e86312e3b5555a7b7bf5759c3344121fb840b", "resource": "list","active": true,"client_id": "c817459c9e546d447e2dde4bcafde76f","access_control_policy.access_control_list.id":"787adc99458c8179ce8cf57ab706d0b2e469404a","access_control_policy.access_control_list.type":"user","access_control_policy.access_control_list.permissions":"read"
+//resource: 1,active: 1,client_id: 1,"access_control_policy.access_control_list.id":1,"access_control_policy.access_control_list.type":1,"access_control_policy.access_control_list.permissions":1
+//version_id:1, resource:1, active:1, client_id:1
+
+
 exports.get_api_key = function(content){
     return new Promise(function(resolve) {
         var authorization = content.request.headers['authorization'];
@@ -186,6 +193,7 @@ exports.get_swagger = function(content){
     return new Promise(function(resolve) {
         var cursor =state.db.collection('swaggers').find({"api_id":content.api_id, "version_name":content.version_name, "active":true}).toArray(function(err, results){
             console.log(err);
+
             content.swagger = results;
             resolve(content);
         });
@@ -206,7 +214,7 @@ exports.get_deployment = function(content){
 };
 
 exports.get_resource = function(content){
-    console.log({"plurality":content.plurality, "version_id":content.version_id, "active":true});
+    //console.log({"plurality":content.plurality, "version_id":content.version_id, "active":true});
     return new Promise(function(resolve) {
         var cursor =state.db.collection('resources').find({"plurality":content.plurality, "version_id":content.version_id, "active":true}).toArray(function(err, results){
             console.log(err);

@@ -10,7 +10,7 @@ var util = require('../util.js');
 var exceptions = require('../exceptions.js');
 
 router.post('/:version_name/oauth2/token', function (request, response) {
-	console.log(request.query);
+	var start_time = Date.now();
 	var content = {};
 
 	content.request = request;
@@ -62,6 +62,7 @@ router.post('/:version_name/oauth2/token', function (request, response) {
 		})
 		.then(magicstack.save_oauth_token)
 		.then(function(content){
+			magicstack.save_request(request, start_time, {"type":"client", "id":content.client_id});
 			response.send(content.oauth_record.body);
 		})
 		.catch(function(err){
