@@ -98,7 +98,7 @@ exports.save_request = function(request, start_time, owner){
     obj.route = request.route;
     obj.path = request.path;
 
-    var cursor = state.db.collection('api_requests').insertOne({"request":obj, "total time (ms)":parseInt(Date.now() - start_time), "owner":owner}, function(err, result){
+    var cursor = state.db.collection('api_requests').insertOne({"request":obj, "response_time":parseInt(Date.now() - start_time), "owner":owner}, function(err, result){
         console.log(err);
 
     });
