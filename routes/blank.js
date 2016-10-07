@@ -19,6 +19,16 @@ router.post('/:version_name/:plurality', function (request, response) {
 	magicstack.get_api_key(content)
 		.then(magicstack.validate_api_key)
 		.then(magicstack.get_deployment)
+		.then(function(content){
+			return new Promise(function(resolve){
+				if(content.results.length == 0){
+					throw new exceptions.ObjectException('could not find deployment');
+				}
+
+				content.magic_environment = content.results[0].environment;
+				resolve(content);
+			});
+		})
 		.then(magicstack.validate_swagger_spec)
 		.then(magicstack.get_resource)
 		.then(function(content){ // dynamically assign content.resource, content.path
@@ -81,7 +91,7 @@ router.get('/:version_name/:plurality', function (request, response) {
 		.then(function(content){
 			return new Promise(function(resolve) {
 				content.query = {"version_id":content.version_id, "resource":content.resource, "active":true, "client_id":content.client_id, "access_control_policy.access_control_list.id":content.user_id, "access_control_policy.access_control_list.type":"user", "access_control_policy.access_control_list.permissions":"read"};
-				console.log(content.query);
+				//console.log(content.query);
 				resolve(content);
 			});
 		})
@@ -151,7 +161,7 @@ router.get('/:version_name/:plurality/:resource_id', function (request, response
 		.then(function(content){
 			return new Promise(function(resolve) {
 				content.query = {"version_id":content.version_id, "body._id":content.resource_id, "active":true, "client_id":content.client_id, "resource":content.resource, "access_control_policy.access_control_list.id":content.user_id, "access_control_policy.access_control_list.type":"user", "access_control_policy.access_control_list.permissions":"read"};
-				console.log(content.query);
+				//console.log(content.query);
 				resolve(content);
 			});
 		})
@@ -194,6 +204,16 @@ router.put('/:version_name/:plurality/:resource_id', function (request, response
 	magicstack.get_api_key(content)
 		.then(magicstack.validate_api_key)
 		.then(magicstack.get_deployment)
+		.then(function(content){
+			return new Promise(function(resolve){
+				if(content.results.length == 0){
+					throw new exceptions.ObjectException('could not find deployment');
+				}
+
+				content.magic_environment = content.results[0].environment;
+				resolve(content);
+			});
+		})
 		.then(magicstack.validate_swagger_spec)
 		.then(magicstack.get_resource)
 		.then(function(content){ // dynamically assign content.resource, content.path
@@ -327,6 +347,16 @@ router.post('/:version_name/:parent/:resource_id/:plurality', function (request,
 	magicstack.get_api_key(content)
 		.then(magicstack.validate_api_key)
 		.then(magicstack.get_deployment)
+		.then(function(content){
+			return new Promise(function(resolve){
+				if(content.results.length == 0){
+					throw new exceptions.ObjectException('could not find deployment');
+				}
+
+				content.magic_environment = content.results[0].environment;
+				resolve(content);
+			});
+		})
 		.then(magicstack.validate_swagger_spec)
 		.then(magicstack.get_parent_resource)
 		.then(function(content){

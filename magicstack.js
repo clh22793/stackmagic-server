@@ -204,7 +204,7 @@ exports.get_deployment = function(content){
     // get swagger for this version
 
     return new Promise(function(resolve) {
-        var cursor =state.db.collection('deployments').find({"environment":process.env.ENVIRONMENT, "version_name":content.version_name, "api_id":content.api_id, "active":true}).toArray(function(err, results){
+        var cursor =state.db.collection('deployments').find({/*"environment":process.env.ENVIRONMENT, */"version_name":content.version_name, "api_id":content.api_id, "active":true}).toArray(function(err, results){
             console.log(err);
 
             content.results = results;
