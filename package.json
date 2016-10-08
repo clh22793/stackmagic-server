@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/clh22793/stackmagic-server#readme",
   "dependencies": {
-    "bcrypt": "0.8.7",
+    "bcryptjs": "2.3.0",
     "bluebird": "3.3.4",
     "body-parser": "1.15.0",
     "dotenv": "2.0.0",

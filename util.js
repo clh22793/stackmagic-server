@@ -1,5 +1,5 @@
 var crypto = require('crypto');
-var bcrypt = require('bcrypt');
+var bcrypt = require('bcryptjs');
 var uuid = require('node-uuid');
 
 const SALT_ROUNDS = 10;

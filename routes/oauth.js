@@ -1,7 +1,7 @@
 // external requires
 var express = require('express');
 var router = express.Router();
-var bcrypt = require('bcrypt');
+var bcrypt = require('bcryptjs');
 
 // internal requires
 var magicstack = require('../magicstack.js');
