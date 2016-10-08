@@ -2,7 +2,7 @@
 var Promise = require('bluebird');
 var MongoClient = Promise.promisifyAll(require('mongodb')).MongoClient;
 var uuid = require('node-uuid');
-require('dotenv').config();
+require('dotenv').config({path:'/stackmagic-server/.env'});
 
 // internal requires
 //var config = require('./config/magicstack.json');
