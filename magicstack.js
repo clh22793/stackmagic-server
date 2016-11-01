@@ -45,6 +45,9 @@ exports.get_api_key = function(content){
         var cursor =state.db.collection(collection).find(query).toArray(function(err, docs){
             console.log(err);
 
+            console.log('get_api_key');
+            console.log(docs);
+
             content.api_keys = docs;
             resolve(content);
         });
@@ -206,6 +209,8 @@ exports.get_deployment = function(content){
     return new Promise(function(resolve) {
         var cursor =state.db.collection('deployments').find({/*"environment":process.env.ENVIRONMENT, */"version_name":content.version_name, "api_id":content.api_id, "active":true}).toArray(function(err, results){
             console.log(err);
+
+            console.log({"version_name":content.version_name, "api_id":content.api_id, "active":true});
 
             content.results = results;
             resolve(content);
