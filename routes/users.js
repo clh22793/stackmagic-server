@@ -93,7 +93,7 @@ router.get('/:version_name/users', function (request, response) {
 				content.payload = payload;
 				// delete passwords from content.payload
 				for(var i=0; i < content.payload.length; i++){
-					delete content.payload[i].password;
+					delete content.payload[i].content.password;
 				}
 
 				console.log(content.payload);
@@ -148,7 +148,7 @@ router.get('/:version_name/users/:resource_id', function (request, response) {
 					content.payload = content.results[0].body;
 
 					// delete password from content.payload
-					delete content.payload.password;
+					delete content.payload.content.password;
 					console.log(content.payload);
 				}
 
