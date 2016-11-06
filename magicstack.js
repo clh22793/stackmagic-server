@@ -31,6 +31,10 @@ MongoClient.connect("mongodb://"+process.env.DB_USER+":"+process.env.DB_PASSWORD
 
 exports.get_api_key = function(content){
     return new Promise(function(resolve) {
+        if(!content.request.headers['authorization']){
+            throw new exceptions.HeaderException('no authorization present.');
+        }
+
         var authorization = content.request.headers['authorization'];
         var authorization_parts = authorization.split(' ');
 
@@ -224,6 +228,9 @@ exports.get_deployment = function(content){
 exports.get_resource = function(content){
     //console.log({"plurality":content.plurality, "version_id":content.version_id, "active":true});
     return new Promise(function(resolve) {
+        console.log('GET_RESOURCE======');
+        console.log({"plurality":content.plurality, "version_id":content.version_id, "active":true});
+
         var cursor =state.db.collection('resources').find({"plurality":content.plurality, "version_id":content.version_id, "active":true}).toArray(function(err, results){
             console.log(err);
 

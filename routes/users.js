@@ -51,12 +51,12 @@ router.post('/:version_name/users', function (request, response) {
 		.then(function(content){
 			delete content.api_object.body.password;
 			magicstack.save_request(request, start_time, {"type":"client", "id":content.client_id});
-			response.send(content.api_object.body);
+			response.status(201).send(content.api_object.body);
 		})
 		.catch(function(err){
 			console.trace();
 			console.log(err);
-			response.send({"error_code":err.code, "error_message":err.message});
+			response.status(500).send({"error_code":err.code, "error_message":err.message});
 		});
 });
 
@@ -103,12 +103,12 @@ router.get('/:version_name/users', function (request, response) {
 		})
 		.then(function(content){
 			magicstack.save_request(request, start_time, {"type":"client", "id":content.client_id});
-			response.send(content.payload);
+			response.status(200).send(content.payload);
 		})
 		.catch(function(err){
 			console.trace();
 			console.log(err);
-			response.send({"error_code":err.code, "error_message":err.message});
+			response.status(500).send({"error_code":err.code, "error_message":err.message});
 		});
 });
 
@@ -157,12 +157,12 @@ router.get('/:version_name/users/:resource_id', function (request, response) {
 		})
 		.then(function(content){
 			magicstack.save_request(request, start_time, {"type":"client", "id":content.client_id});
-			response.send(content.payload);
+			response.status(200).send(content.payload);
 		})
 		.catch(function(err){
 			console.trace();
 			console.log(err);
-			response.send({"error_code":err.code, "error_message":err.message});
+			response.status(500).send({"error_code":err.code, "error_message":err.message});
 		});
 });
 
@@ -218,12 +218,12 @@ router.put('/:version_name/users/:resource_id', function (request, response) {
 		.then(function(content){
 			//response.send(content.api_object.body);
 			magicstack.save_request(request, start_time, {"type":"client", "id":content.client_id});
-			response.send(content.payload);
+			response.status(200).send(content.payload);
 		})
 		.catch(function(err){
 			console.trace();
 			console.log(err);
-			response.send({"error_code":err.code, "error_message":err.message});
+			response.status(500).send({"error_code":err.code, "error_message":err.message});
 		});
 });
 
@@ -246,12 +246,12 @@ router.delete('/:version_name/users/:resource_id', function (request, response) 
 		.then(magicstack.delete_api_object)
 		.then(function(content){
 			magicstack.save_request(request, start_time, {"type":"client", "id":content.client_id});
-			response.send({});
+			response.status(200).send({});
 		})
 		.catch(function(err){
 			console.trace();
 			console.log(err);
-			response.send({"error_code":err.code, "error_message":err.message});
+			response.status(500).send({"error_code":err.code, "error_message":err.message});
 		});
 });
 

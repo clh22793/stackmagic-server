@@ -54,12 +54,12 @@ router.post('/:version_name/:plurality', function (request, response) {
 		.then(magicstack.insert_api_object)
 		.then(function(content){
 			magicstack.save_request(request, start_time, {"type":"user", "id":content.user_id});
-			response.send(content.api_object.body);
+			response.status(201).send(content.api_object.body);
 		})
 		.catch(function(err){
 			console.trace();
 			console.log(err);
-			response.send({"error_code":err.code, "error_message":err.message});
+			response.status(500).send({"error_code":err.code, "error_message":err.message});
 		});
 });
 
@@ -114,12 +114,12 @@ router.get('/:version_name/:plurality', function (request, response) {
 		})
 		.then(function(content){
 			magicstack.save_request(request, start_time, {"type":"user", "id":content.user_id});
-			response.send(content.payload);
+			response.status(200).send(content.payload);
 		})
 		.catch(function(err){
 			console.trace();
 			console.log(err);
-			response.send({"error_code":err.code, "error_message":err.message});
+			response.status(500).send({"error_code":err.code, "error_message":err.message});
 		});
 });
 
@@ -183,12 +183,12 @@ router.get('/:version_name/:plurality/:resource_id', function (request, response
 		})
 		.then(function(content){
 			magicstack.save_request(request, start_time, {"type":"user", "id":content.user_id});
-			response.send(content.payload);
+			response.status(200).send(content.payload);
 		})
 		.catch(function(err){
 			console.trace();
 			console.log(err);
-			response.send({"error_code":err.code, "error_message":err.message});
+			response.status(500).send({"error_code":err.code, "error_message":err.message});
 		});
 });
 
@@ -276,12 +276,12 @@ router.put('/:version_name/:plurality/:resource_id', function (request, response
 		})
 		.then(function(content){
 			magicstack.save_request(request, start_time, {"type":"user", "id":content.user_id});
-			response.send(content.payload);
+			response.status(200).send(content.payload);
 		})
 		.catch(function(err){
 			console.trace();
 			console.log(err);
-			response.send({"error_code":err.code, "error_message":err.message});
+			response.status(500).send({"error_code":err.code, "error_message":err.message});
 		});
 });
 
@@ -330,12 +330,12 @@ router.delete('/:version_name/:plurality/:resource_id', function (request, respo
 		.then(magicstack.delete_api_object)
 		.then(function(content){
 			magicstack.save_request(request, start_time, {"type":"user", "id":content.user_id});
-			response.send({});
+			response.status(200).send({});
 		})
 		.catch(function(err){
 			console.trace();
 			console.log(err);
-			response.send({"error_code":err.code, "error_message":err.message});
+			response.status(500).send({"error_code":err.code, "error_message":err.message});
 		});
 });
 
@@ -405,12 +405,12 @@ router.post('/:version_name/:parent/:resource_id/:plurality', function (request,
 		.then(magicstack.insert_api_object)
 		.then(function(content){
 			magicstack.save_request(request, start_time, {"type":"user", "id":content.user_id});
-			response.send(content.api_object.body);
+			response.status(201).send(content.api_object.body);
 		})
 		.catch(function(err){
 			console.trace();
 			console.log(err);
-			response.send({"error_code":err.code, "error_message":err.message});
+			response.status(500).send({"error_code":err.code, "error_message":err.message});
 		});
 });
 
@@ -479,12 +479,12 @@ router.get('/:version_name/:parent/:resource_id/:plurality', function (request, 
 		})
 		.then(function(content){
 			magicstack.save_request(request, start_time, {"type":"user", "id":content.user_id});
-			response.send(content.payload);
+			response.status(200).send(content.payload);
 		})
 		.catch(function(err){
 			console.trace();
 			console.log(err);
-			response.send({"error_code":err.code, "error_message":err.message});
+			response.status(500).send({"error_code":err.code, "error_message":err.message});
 		});
 });
 
