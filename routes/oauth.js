@@ -30,7 +30,7 @@ router.post('/:version_name/oauth2/token', function (request, response) {
 					throw new exceptions.ObjectException('invalid credentials');
 				}
 
-				if(!bcrypt.compareSync(content.password, content.results[0].body.password)){
+				if(!bcrypt.compareSync(content.password, content.results[0].body.content.password)){
 					throw new exceptions.ObjectException('invalid credentials');
 				}
 
@@ -46,13 +46,13 @@ router.post('/:version_name/oauth2/token', function (request, response) {
 					var object = {};
 					object.api_id = content.api_id;
 					object.version_id = content.version_id;
-					object.user_id = content.results[0].body._id;
+					object.user_id = content.results[0].body.content._id;
 					object.client_id = content.client_id;
 					object.active = true;
 					object.body = {};
 					object.body._created = new Date().toISOString();
 					object.body.access_token = util.generate_oauth_token();
-					object.body.user_id = content.results[0].body._id;
+					object.body.user_id = content.results[0].body.content._id;
 
 					content.oauth_record = object;
 				//}

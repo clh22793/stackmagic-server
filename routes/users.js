@@ -131,7 +131,7 @@ router.get('/:version_name/users/:resource_id', function (request, response) {
 		.then(magicstack.validate_swagger_spec)
 		.then(function(content){
 			return new Promise(function(resolve) {
-				content.query = {"version_id":content.version_id, "body._id":content.resource_id, "active":true, "client_id":content.client_id, "resource":content.resource};
+				content.query = {"version_id":content.version_id, "body.content._id":content.resource_id, "active":true, "client_id":content.client_id, "resource":content.resource};
 				resolve(content);
 			});
 		})
@@ -184,7 +184,7 @@ router.put('/:version_name/users/:resource_id', function (request, response) {
 		.then(magicstack.validate_swagger_spec)
 		.then(function(content){ // set query for db retrieval
 			return new Promise(function(resolve) {
-				content.query = {"version_id":content.version_id, "body._id":content.resource_id, "active":true, "client_id":content.client_id, "resource":content.resource};
+				content.query = {"version_id":content.version_id, "body.content._id":content.resource_id, "active":true, "client_id":content.client_id, "resource":content.resource};
 				resolve(content);
 			});
 		})
@@ -195,9 +195,11 @@ router.put('/:version_name/users/:resource_id', function (request, response) {
 				if(content.results.length == 0){
 					throw new exceptions.ObjectException('retrieval error');
 				}else{
-					content._created = content.results[0].body._created;
+					content._created = content.results[0].body.meta._created;
+					content._id = content.results[0].body.content._id;
+					content.access_control_policy = content.results[0].access_control_policy;
 					if(content.resource == 'user'){
-						content.password = content.results[0].body.password; // ONLY FOR USER RESOURCE
+						content.password = content.results[0].body.content.password; // ONLY FOR USER RESOURCE
 					}
 				}
 				resolve(content);

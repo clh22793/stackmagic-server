@@ -160,7 +160,7 @@ router.get('/:version_name/:plurality/:resource_id', function (request, response
 		})
 		.then(function(content){
 			return new Promise(function(resolve) {
-				content.query = {"version_id":content.version_id, "body._id":content.resource_id, "active":true, "client_id":content.client_id, "resource":content.resource, "access_control_policy.access_control_list.id":content.user_id, "access_control_policy.access_control_list.type":"user", "access_control_policy.access_control_list.permissions":"read"};
+				content.query = {"version_id":content.version_id, "body.content._id":content.resource_id, "active":true, "client_id":content.client_id, "resource":content.resource, "access_control_policy.access_control_list.id":content.user_id, "access_control_policy.access_control_list.type":"user", "access_control_policy.access_control_list.permissions":"read"};
 				//console.log(content.query);
 				resolve(content);
 			});
@@ -230,7 +230,7 @@ router.put('/:version_name/:plurality/:resource_id', function (request, response
 		})
 		.then(function(content){ // set query for db retrieval
 			return new Promise(function(resolve) {
-				content.query = {"version_id":content.version_id, "body._id":content.resource_id, "active":true, "client_id":content.client_id, "resource":content.resource};
+				content.query = {"version_id":content.version_id, "body.content._id":content.resource_id, "active":true, "client_id":content.client_id, "resource":content.resource};
 				resolve(content);
 			});
 		})
@@ -250,11 +250,16 @@ router.put('/:version_name/:plurality/:resource_id', function (request, response
 				if(content.results.length == 0){
 					throw new exceptions.ObjectException('retrieval error');
 				}else{
-					content._created = content.results[0].body._created;
+					/*content._created = content.results[0].body._created;
+					content._id = content.results[0].body.content._id;
+					content.access_control_policy = content.results[0].access_control_policy;*/
+
+					content._created = content.results[0].body.meta._created;
+					content._id = content.results[0].body.content._id;
 					content.access_control_policy = content.results[0].access_control_policy;
-					if(content.resource == 'user'){
+					/*if(content.resource == 'user'){
 						content.password = content.results[0].body.password; // ONLY FOR USER RESOURCE
-					}
+					}*/
 				}
 				resolve(content);
 			});
@@ -308,7 +313,7 @@ router.delete('/:version_name/:plurality/:resource_id', function (request, respo
 		})
 		.then(function(content){ // set query for db retrieval
 			return new Promise(function(resolve) {
-				content.query = {"version_id":content.version_id, "body._id":content.resource_id, "active":true, "client_id":content.client_id, "resource":content.resource};
+				content.query = {"version_id":content.version_id, "body.content._id":content.resource_id, "active":true, "client_id":content.client_id, "resource":content.resource};
 				resolve(content);
 			});
 		})

@@ -109,7 +109,7 @@ exports.save_request = function(request, start_time, owner){
 
 exports.delete_api_object = function(content){
     return new Promise(function(resolve) {
-        var cursor = state.db.collection('api_objects').updateMany({"body._id":content.resource_id,"client_id":content.client_id},{$set: { "active": false},$currentDate: { "lastModified": true }}, function(err, result){
+        var cursor = state.db.collection('api_objects').updateMany({"body.content._id":content.resource_id,"client_id":content.client_id},{$set: { "active": false},$currentDate: { "lastModified": true }}, function(err, result){
             console.log(err);
             content.insert_result = result;
 
@@ -120,7 +120,7 @@ exports.delete_api_object = function(content){
 
 exports.get_user_by_api = function(content){
     return new Promise(function(resolve) {
-        var cursor =state.db.collection('api_objects').find({"body.username": content.request.body.username, "api_id": content.api_id, "active": true}).toArray(function(err, docs){
+        var cursor =state.db.collection('api_objects').find({"body.content.username": content.request.body.username, "api_id": content.api_id, "active": true}).toArray(function(err, docs){
             console.log(err);
             content.api_object_users = docs;
             resolve(content);
@@ -131,7 +131,10 @@ exports.get_user_by_api = function(content){
 exports.authenticate_user = function(content){
     return new Promise(function(resolve) {
 
-        var cursor =state.db.collection('api_objects').find({"body.username": content.username, /*"body.password": util.encrypt_password(content.password),*/ "active": true}).toArray(function(err, docs){
+        console.log("AUTHENTICATE_USER");
+        console.log({"body.content.username": content.username, /*"body.password": util.encrypt_password(content.password),*/ "active": true})
+
+        var cursor =state.db.collection('api_objects').find({"body.content.username": content.username, /*"body.password": util.encrypt_password(content.password),*/ "active": true}).toArray(function(err, docs){
             console.log(err);
             content.results = docs;
             resolve(content);
@@ -153,7 +156,7 @@ exports.retrieve_api_objects = function(content){
 // IS THIS USED!?!?!?!?!?
 exports.retrieve_api_objects_by_id = function(content){
     return new Promise(function(resolve) {
-        var cursor =state.db.collection('api_objects').find({"body._id":content.resource_id, "version_id":content.version_id, "user_id":content.user_id, "active": true}).toArray(function(err, docs){
+        var cursor =state.db.collection('api_objects').find({"body.content._id":content.resource_id, "version_id":content.version_id, "user_id":content.user_id, "active": true}).toArray(function(err, docs){
             console.log(err);
             content.retrieved_api_objects = docs;
             resolve(content);
@@ -282,6 +285,8 @@ exports.build_api_object = function(content){
         // check for required body params
         if(parameters.required == true && parameters.in == 'body'){
             var body = {};
+            body.meta = {};
+            body.content = {};
 
             // get reference definition
             var schema = parameters.schema;
@@ -292,7 +297,8 @@ exports.build_api_object = function(content){
             // build payload
             for(var key in properties){
                 if(request.body.derived && request.body.derived[key]){ // parameters that are read only, but derived during the post or put request (ie: child resources need to be linked to parent resources through parent resource id that appears only in url parameter)
-                    body[key] = request.body.derived[key];
+                    //body[key] = request.body.derived[key];
+                    body.content[key] = request.body.derived[key];
                 }else if(properties[key].readOnly == true){
                     continue;
                 }else if(request.body[key]){
@@ -300,16 +306,18 @@ exports.build_api_object = function(content){
                         //body[key] = crypto.createHash('sha1').update(request.body[key]+request.body['username']).digest("hex")
                         // validate that user is an email
 
-                        body[key] = util.encrypt_password(request.body[key]);
+                        //body[key] = util.encrypt_password(request.body[key]);
+                        body.content[key] = util.encrypt_password(request.body[key]);
                     }else{
-                        body[key] = request.body[key];
+                        //body[key] = request.body[key];
+                        body.content[key] = request.body[key];
                     }
                 }
             }
 
             // confirm that payload has all required params
             for(var i=0; i < required_params.length; i++){
-                if(!body[required_params[i]]){
+                if(!body.content[required_params[i]]){
                     if(schema_parts[1].toLowerCase() == 'user' && required_params[i].toLowerCase() == 'password' && request.method.toLowerCase() == 'put'){
                         // do nothing; THIS IS A HACK; the real fix is a custom param in the swagger spec that denotes parameters that are required for post but optional for put
                     }else{
@@ -323,13 +331,18 @@ exports.build_api_object = function(content){
         var current_ISODate = new Date().toISOString();
 
         if(request.method.toLowerCase() == 'post'){
-            body._created = current_ISODate;
+            /*body._created = current_ISODate;
             body._lastModified = current_ISODate;
             body._type = schema_parts[1].toLowerCase();
             body._resource = schema_parts[1].toLowerCase();
-            body._id = util.hash('sha1', body._created+body._type+uuid.v4());
+            body._id = util.hash('sha1', body._created+body._type+uuid.v4());*/
+
+            body.meta._resource = schema_parts[1].toLowerCase();
+            body.meta._created = current_ISODate;
+            body.meta._lastModified = current_ISODate;
+            body.content._id = util.hash('sha1', body._created+body._type+uuid.v4());
         }else if(request.method.toLowerCase() == 'put'){
-            body._created = content._created;
+            /*body._created = content._created;
             body._lastModified = current_ISODate;
             body._type = schema_parts[1].toLowerCase();
             body._resource = schema_parts[1].toLowerCase();
@@ -337,6 +350,22 @@ exports.build_api_object = function(content){
             //body.password = body.password || content.password;
             if(content.password){
                 body.password = content.password;
+            }*/
+
+            body.meta._resource = schema_parts[1].toLowerCase();
+            body.meta._created = current_ISODate;
+            body.meta._lastModified = current_ISODate;
+            body.content._id = util.hash('sha1', body._created+body._type+uuid.v4());
+
+            // account for objects that existed in previous object instance
+            if(content.password){
+                body.content.password = content.password;
+            }
+            if(content._created){
+                body.meta._created = content._created;
+            }
+            if(content._id){
+                body.content._id = content._id;
             }
         }
 
