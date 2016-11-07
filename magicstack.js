@@ -138,7 +138,7 @@ exports.authenticate_user = function(content){
         console.log("AUTHENTICATE_USER");
         console.log({"body.content.username": content.username, /*"body.password": util.encrypt_password(content.password),*/ "active": true})
 
-        var cursor =state.db.collection('api_objects').find({"body.content.username": content.username, /*"body.password": util.encrypt_password(content.password),*/ "active": true}).toArray(function(err, docs){
+        var cursor =state.db.collection('api_objects').find({"body.content.username": content.username, /*"body.password": util.encrypt_password(content.password),*/ "active": true, "api_id":content.api_id}).toArray(function(err, docs){
             console.log(err);
             content.results = docs;
             resolve(content);
