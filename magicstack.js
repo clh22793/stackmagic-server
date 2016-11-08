@@ -348,6 +348,10 @@ exports.build_api_object = function(content){
             body.meta._created = current_ISODate;
             body.meta._lastModified = current_ISODate;
             body.content._id = util.hash('sha1', body._created+body._type+uuid.v4());
+
+            if(content.parent){ // if this resource belongs to a parent, save proper derived resource_id
+                body.content["_"+content.parent_resource_name+"_id"] = content.parent_id;
+            }
         }else if(request.method.toLowerCase() == 'put'){
             /*body._created = content._created;
             body._lastModified = current_ISODate;

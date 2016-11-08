@@ -339,7 +339,7 @@ router.delete('/:version_name/:plurality/:resource_id', function (request, respo
 		});
 });
 
-router.post('/:version_name/:parent/:resource_id/:plurality', function (request, response) {
+router.post('/:version_name/:parent/:parent_id/:plurality', function (request, response) {
   	var start_time = Date.now();
 
   	var content = {};
@@ -347,7 +347,7 @@ router.post('/:version_name/:parent/:resource_id/:plurality', function (request,
 	content.request = request;
 	content.plurality = request.params.plurality;
 	content.parent = request.params.parent;
-	content.resource_id = request.params.resource_id;
+	content.parent_id = request.params.parent_id;
 
 	magicstack.get_api_key(content)
 		.then(magicstack.validate_api_key)
@@ -369,7 +369,7 @@ router.post('/:version_name/:parent/:resource_id/:plurality', function (request,
 		        if(content.results.length == 0){
 		            throw new exceptions.ObjectException('could not find parent resource');
 		        }else{
-		            content.parent_resource = content.results[0].name.toLowerCase();
+		            content.parent_resource_name = content.results[0].name.toLowerCase();
 		        }
 		        resolve(content);
 		    });
@@ -382,7 +382,7 @@ router.post('/:version_name/:parent/:resource_id/:plurality', function (request,
 				}else{
 					content.resource_id = content.results[0].id;
 					content.resource = content.results[0].name.toLowerCase();
-					content.path = content.parent+"/{"+content.parent_resource+"_id}/"+content.plurality;
+					content.path = content.parent+"/{"+content.parent_resource_name+"_id}/"+content.plurality;
 				}
 
 				resolve(content);
@@ -396,8 +396,8 @@ router.post('/:version_name/:parent/:resource_id/:plurality', function (request,
 		})
 		.then(function(content){
 			return new Promise(function(resolve){ // insert derived values; bypass swagger defined read_only param attributes
-				content.request.body.derived = {};
-				content.request.body.derived["list_id"] = content.resource_id;
+				//content.request.body.derived = {};
+				//content.request.body.derived["list_id"] = content.resource_id;
 				resolve(content);
 			});
 		})
@@ -435,7 +435,7 @@ router.get('/:version_name/:parent/:resource_id/:plurality', function (request, 
 		        if(content.results.length == 0){
 		            throw new exceptions.ObjectException('could not find parent resource');
 		        }else{
-		            content.parent_resource = content.results[0].name.toLowerCase();
+		            content.parent_resource_name = content.results[0].name.toLowerCase();
 		        }
 		        resolve(content);
 		    });
@@ -447,7 +447,7 @@ router.get('/:version_name/:parent/:resource_id/:plurality', function (request, 
 					throw new exceptions.ObjectException('could not find resource');
 				}else{
 					content.resource = content.results[0].name.toLowerCase();
-					content.path = content.parent+"/{"+content.parent_resource+"_id}/"+content.plurality;
+					content.path = content.parent+"/{"+content.parent_resource_name+"_id}/"+content.plurality;
 				}
 
 				resolve(content);
