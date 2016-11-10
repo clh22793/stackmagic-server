@@ -22,6 +22,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(function(){
 	winston.info("");
 	winston.info("===INCOMING==");
+	next();
 });
 
 var get_path_details_from_spec = function(spec, request){
