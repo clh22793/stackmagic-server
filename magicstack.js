@@ -36,7 +36,7 @@ exports.get_api_key = function(content){
             throw new exceptions.HeaderException('no authorization present.');
         }
 
-        var authorization = content.request.headers['authorization'];
+        var authorization = content.request.headers['authorization'].replace(/\s+/g, " ");
         var authorization_parts = authorization.split(' ');
 
         if(authorization_parts[0].toLowerCase() == 'basic'){
