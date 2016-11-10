@@ -271,14 +271,12 @@ exports.build_api_object = function(content){
         var spec = content.spec;
         var request = content.request;
 
-        winston.info('REQUEST BODY');
-        winston.info(request.body);
+        winston.info('REQUEST BODY: ', request.body);
 
         if(!spec.paths[content.path]){
             throw new exceptions.ObjectException("path not supported: "+content.path);
         }
 
-        winston.info('build api object');
         winston.info(spec.paths[content.path.toLowerCase()]);
 
         if(!spec.paths[content.path.toLowerCase()][request.method.toLowerCase()]){
@@ -389,6 +387,8 @@ exports.build_api_object = function(content){
         if(content.user_id){
             content.api_object.user_id = content.user_id;
         }
+
+        winston.info('API OBJECT: ', content.api_object);
         resolve(content);
     });
 };
