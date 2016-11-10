@@ -23,6 +23,7 @@
     "dotenv": "2.0.0",
     "express": "4.13.4",
     "mongodb": "2.1.18",
-    "node-uuid": "1.4.7"
+    "node-uuid": "1.4.7",
+    "winston": "2.3.0"
   }
 }
