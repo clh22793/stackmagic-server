@@ -19,7 +19,7 @@ app.use(bodyParser.json());
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
 
-app.use(function(){
+app.use(function(req,res,next){
 	winston.info("");
 	winston.info("===INCOMING==");
 	next();
