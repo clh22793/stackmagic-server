@@ -3,6 +3,7 @@ var express = require('express');
 var Promise = require('bluebird');
 var bodyParser = require('body-parser');
 var app = express();
+const winston = require('winston');
 
 // internal requires
 var magicstack = require('./magicstack.js');
@@ -17,6 +18,11 @@ app.use(bodyParser.json());
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
+
+app.use(function(){
+	winston.info("");
+	winston.info("===INCOMING==");
+});
 
 var get_path_details_from_spec = function(spec, request){
 	console.log('get_auth_from_spec');
