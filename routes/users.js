@@ -49,7 +49,7 @@ router.post('/:version_name/users', function (request, response) {
 		.then(magicstack.build_api_object)
 		.then(magicstack.insert_api_object)
 		.then(function(content){
-			delete content.api_object.body.password;
+			delete content.api_object.body.content.password;
 			magicstack.save_request(request, start_time, {"type":"client", "id":content.client_id});
 			response.status(201).send(content.api_object.body);
 		})
@@ -195,11 +195,14 @@ router.put('/:version_name/users/:resource_id', function (request, response) {
 				if(content.results.length == 0){
 					throw new exceptions.ObjectException('retrieval error');
 				}else{
-					content._created = content.results[0].body.meta._created;
-					content._id = content.results[0].body.content._id;
+					/*content._created = content.results[0].body.meta._created;
+					content._id = content.results[0].body.content._id;*/
+
+					content.retrieved_object_body = content.results[0].body;
+
 					content.access_control_policy = content.results[0].access_control_policy;
 					if(content.resource == 'user'){
-						content.password = content.results[0].body.content.password; // ONLY FOR USER RESOURCE
+						//content.password = content.results[0].body.content.password; // ONLY FOR USER RESOURCE
 					}
 				}
 				resolve(content);
@@ -211,7 +214,7 @@ router.put('/:version_name/users/:resource_id', function (request, response) {
 		.then(function(content){
 			return new Promise(function(resolve) {
 				content.payload = content.api_object.body;
-				delete content.payload.password;
+				delete content.payload.content.password;
 				resolve(content);
 			});
 		})

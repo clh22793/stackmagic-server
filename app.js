@@ -22,6 +22,10 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(function(req,res,next){
 	winston.info("");
 	winston.info("===INCOMING==");
+	winston.info("METHOD:",req.method);
+	winston.info("PATH:", req.path);
+	winston.info("BODY:",req.body);
+	winston.info("QUERY:",req.query);
 	next();
 });
 

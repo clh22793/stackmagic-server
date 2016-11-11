@@ -266,18 +266,18 @@ exports.build_api_object = function(content){
     return new Promise(function(resolve) {
         winston.info('BUILD API OBJECT');
         content.spec = JSON.parse(content.swagger);
-        winston.info(content.spec.paths);
+        //winston.info(content.spec.paths);
 
         var spec = content.spec;
         var request = content.request;
 
-        winston.info('REQUEST BODY: ', request.body);
+        winston.debug('REQUEST BODY: ', request.body);
 
         if(!spec.paths[content.path]){
             throw new exceptions.ObjectException("path not supported: "+content.path);
         }
 
-        winston.info(spec.paths[content.path.toLowerCase()]);
+        winston.debug(spec.paths[content.path.toLowerCase()]);
 
         if(!spec.paths[content.path.toLowerCase()][request.method.toLowerCase()]){
             throw new exceptions.ObjectException("method not allowed: "+request.method.toLowerCase());
@@ -286,8 +286,10 @@ exports.build_api_object = function(content){
         var parameters = spec.paths[content.path][request.method.toLowerCase()].parameters[0];
         var definitions = spec.definitions;
 
+        winston.info("PARAMETERS:",parameters);
+
         // check for required body params
-        if(parameters.required == true && parameters.in == 'body'){
+        if(/*parameters.required == true && */parameters.in == 'body'){
             var body = {};
             body.meta = {};
             body.content = {};
@@ -300,12 +302,13 @@ exports.build_api_object = function(content){
 
             // build payload
             for(var key in properties){
+                winston.info("KEY:",key);
                 if(request.body.derived && request.body.derived[key]){ // parameters that are read only, but derived during the post or put request (ie: child resources need to be linked to parent resources through parent resource id that appears only in url parameter)
                     //body[key] = request.body.derived[key];
                     body.content[key] = request.body.derived[key];
                 }else if(properties[key].readOnly == true){
                     continue;
-                }else if(request.body[key]){
+                }else if(request.body[key] || request.body[key] === false){ // account for false boolean values
                     if(schema_parts[1].toLowerCase() == 'user' && key.toLowerCase() == 'password'){
                         //body[key] = crypto.createHash('sha1').update(request.body[key]+request.body['username']).digest("hex")
                         // validate that user is an email
@@ -317,6 +320,8 @@ exports.build_api_object = function(content){
                         body.content[key] = request.body[key];
                     }
                 }
+
+                winston.info("BODY.CONTENT[KEY]:",body.content[key]);
             }
 
             // confirm that payload has all required params
@@ -327,7 +332,6 @@ exports.build_api_object = function(content){
                     }else{
                         throw new exceptions.PayloadException("missing required parameter: "+required_params[i]);
                     }
-
                 }
             }
         }
@@ -363,10 +367,10 @@ exports.build_api_object = function(content){
             body.meta._resource = schema_parts[1].toLowerCase();
             body.meta._created = current_ISODate;
             body.meta._lastModified = current_ISODate;
-            body.content._id = util.hash('sha1', body._created+body._type+uuid.v4());
+            //body.content._id = util.hash('sha1', body._created+body._type+uuid.v4());
 
             // account for objects that existed in previous object instance
-            if(content.password){
+            /*if(content.password){
                 body.content.password = content.password;
             }
             if(content._created){
@@ -374,7 +378,14 @@ exports.build_api_object = function(content){
             }
             if(content._id){
                 body.content._id = content._id;
-            }
+            }*/
+
+            winston.info("RETRIEVED_OBJECT", content.retrieved_object_body.content);
+            winston.info("NEW OBJECT", body.content);
+
+            body.content = util.merge_objects(content.retrieved_object_body.content, body.content);
+
+            winston.info("UPDATED OBJECT", body.content);
         }
 
         /*content.api_object = {"body":body, "type":schema_parts[1].toLowerCase(), "api_id":content.api_id, "version_id":content.version_id,

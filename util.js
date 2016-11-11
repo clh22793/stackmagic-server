@@ -1,7 +1,7 @@
 var crypto = require('crypto');
 var bcrypt = require('bcryptjs');
 var uuid = require('node-uuid');
-
+const winston = require('winston');
 const SALT_ROUNDS = 10;
 
 exports.encrypt_password = function(password){
@@ -45,4 +45,17 @@ exports.user_has_permissions = function(access_control_policy, user_id, permissi
     }
 
     return false;
+};
+
+exports.merge_objects = function(obj1,obj2){
+  winston.info("OBJ2 BEFORE:",obj2);
+
+  for(property in obj1){
+    if(!obj2[property]){
+      obj2[property] = obj1[property];
+    }
+  }
+
+  winston.info("OBJ2 AFTER:",obj2);
+  return obj2;
 };
