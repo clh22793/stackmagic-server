@@ -47,15 +47,53 @@ exports.user_has_permissions = function(access_control_policy, user_id, permissi
     return false;
 };
 
-exports.merge_objects = function(obj1,obj2){
-  winston.info("OBJ2 BEFORE:",obj2);
+/**
+ @description = takes keys that exist in obj1 and set in obj2 if dne.
 
+ returns obj2
+*/
+
+exports.merge_objects = function(obj1,obj2){
   for(property in obj1){
     if(!obj2[property]){
       obj2[property] = obj1[property];
     }
   }
 
-  winston.info("OBJ2 AFTER:",obj2);
   return obj2;
 };
+
+exports.valid_input = function(value, type){
+    var type = type.toLowerCase();
+
+    switch(type){
+        case "string":
+            return typeof value == "string";
+            break;
+
+        case "boolean":
+            return typeof value == "boolean";
+            break;
+
+        case "number":
+            return typeof value == "number";
+            break;
+
+        case "array":
+            if (typeof value == "string"){
+                return false;
+            }else{
+                return value.length >= 0;
+            }
+
+            break;
+
+        case "object":
+            if (typeof value == "number"){
+                return false;
+            }else{
+                return value.length == undefined;
+            }
+
+    }
+}

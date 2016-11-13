@@ -195,15 +195,10 @@ router.put('/:version_name/users/:resource_id', function (request, response) {
 				if(content.results.length == 0){
 					throw new exceptions.ObjectException('retrieval error');
 				}else{
-					/*content._created = content.results[0].body.meta._created;
-					content._id = content.results[0].body.content._id;*/
-
 					content.retrieved_object_body = content.results[0].body;
 
 					content.access_control_policy = content.results[0].access_control_policy;
-					if(content.resource == 'user'){
-						//content.password = content.results[0].body.content.password; // ONLY FOR USER RESOURCE
-					}
+
 				}
 				resolve(content);
 			});

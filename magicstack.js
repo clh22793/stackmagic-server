@@ -303,6 +303,12 @@ exports.build_api_object = function(content){
             // build payload
             for(var key in properties){
                 winston.info("KEY:",key);
+                winston.info("PROPERTIES:",properties[key]);
+
+                if(request.body[key] && !util.valid_input(request.body[key], properties[key].type)){
+                    throw new exceptions.PayloadException("validation error: '"+key+"' is not of type "+properties[key].type);
+                }
+
                 if(request.body.derived && request.body.derived[key]){ // parameters that are read only, but derived during the post or put request (ie: child resources need to be linked to parent resources through parent resource id that appears only in url parameter)
                     //body[key] = request.body.derived[key];
                     body.content[key] = request.body.derived[key];
@@ -339,12 +345,6 @@ exports.build_api_object = function(content){
         var current_ISODate = new Date().toISOString();
 
         if(request.method.toLowerCase() == 'post'){
-            /*body._created = current_ISODate;
-            body._lastModified = current_ISODate;
-            body._type = schema_parts[1].toLowerCase();
-            body._resource = schema_parts[1].toLowerCase();
-            body._id = util.hash('sha1', body._created+body._type+uuid.v4());*/
-
             body.meta._resource = schema_parts[1].toLowerCase();
             body.meta._created = current_ISODate;
             body.meta._lastModified = current_ISODate;
@@ -354,38 +354,10 @@ exports.build_api_object = function(content){
                 body.content["_"+content.parent_resource_name+"_id"] = content.parent_id;
             }
         }else if(request.method.toLowerCase() == 'put'){
-            /*body._created = content._created;
-            body._lastModified = current_ISODate;
-            body._type = schema_parts[1].toLowerCase();
-            body._resource = schema_parts[1].toLowerCase();
-            body._id = content.resource_id;
-            //body.password = body.password || content.password;
-            if(content.password){
-                body.password = content.password;
-            }*/
-
             body.meta._resource = schema_parts[1].toLowerCase();
             body.meta._created = current_ISODate;
             body.meta._lastModified = current_ISODate;
-            //body.content._id = util.hash('sha1', body._created+body._type+uuid.v4());
-
-            // account for objects that existed in previous object instance
-            /*if(content.password){
-                body.content.password = content.password;
-            }
-            if(content._created){
-                body.meta._created = content._created;
-            }
-            if(content._id){
-                body.content._id = content._id;
-            }*/
-
-            winston.info("RETRIEVED_OBJECT", content.retrieved_object_body.content);
-            winston.info("NEW OBJECT", body.content);
-
             body.content = util.merge_objects(content.retrieved_object_body.content, body.content);
-
-            winston.info("UPDATED OBJECT", body.content);
         }
 
         /*content.api_object = {"body":body, "type":schema_parts[1].toLowerCase(), "api_id":content.api_id, "version_id":content.version_id,
