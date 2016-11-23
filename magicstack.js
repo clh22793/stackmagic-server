@@ -305,7 +305,7 @@ exports.build_api_object = function(content){
                 winston.info("KEY:",key);
                 winston.info("PROPERTIES:",properties[key]);
 
-                if(schema_parts[1].toLowerCase() == 'user'){
+                if(schema_parts[1].toLowerCase() == 'user' && key.toLowerCase() == 'username'){
                     var type = 'email';
 
                 }else{
@@ -313,7 +313,8 @@ exports.build_api_object = function(content){
                 }
 
                 if(request.body[key] && !util.valid_input(request.body[key], type)){
-                    throw new exceptions.PayloadException("validation error: '"+key+"' is not of type "+properties[key].type);
+                    //throw new exceptions.PayloadException("validation error: '"+key+"' is not of type "+properties[key].type);
+                    throw new exceptions.PayloadException("validation error: '"+key+"' is not of type "+type);
                 }
 
                 if(request.body.derived && request.body.derived[key]){ // parameters that are read only, but derived during the post or put request (ie: child resources need to be linked to parent resources through parent resource id that appears only in url parameter)
