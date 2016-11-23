@@ -305,7 +305,13 @@ exports.build_api_object = function(content){
                 winston.info("KEY:",key);
                 winston.info("PROPERTIES:",properties[key]);
 
-                if(request.body[key] && !util.valid_input(request.body[key], properties[key].type)){
+                if(schema_parts[1].toLowerCase() == 'user'){
+                    var type = 'email';
+                }else{
+                    var type = properties[key].type;
+                }
+
+                if(request.body[key] && !util.valid_input(request.body[key], type)){
                     throw new exceptions.PayloadException("validation error: '"+key+"' is not of type "+properties[key].type);
                 }
 

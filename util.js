@@ -67,6 +67,16 @@ exports.valid_input = function(value, type){
     var type = type.toLowerCase();
 
     switch(type){
+        case "email":
+            var match = email.match(/^.+@.+\..+$/);
+            if(match){
+                return true;
+            }else{
+                return false;
+            }
+
+            break;
+
         case "string":
             return typeof value == "string";
             break;
