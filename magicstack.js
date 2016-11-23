@@ -301,7 +301,7 @@ exports.build_api_object = function(content){
             var properties = definitions[schema_parts[1]].properties;
 
             // build payload
-            for(var key in properties){
+            for(var key in properties){ 
                 winston.info("KEY:",key);
                 winston.info("PROPERTIES:",properties[key]);
 
@@ -312,7 +312,7 @@ exports.build_api_object = function(content){
                     var type = properties[key].type;
                 }
 
-                if(request.body[key] && !util.valid_input(request.body[key], properties[key].type)){
+                if(request.body[key] && !util.valid_input(request.body[key], type)){
                     throw new exceptions.PayloadException("validation error: '"+key+"' is not of type "+properties[key].type);
                 }
 
