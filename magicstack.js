@@ -301,7 +301,7 @@ exports.build_api_object = function(content){
             var properties = definitions[schema_parts[1]].properties;
 
             // build payload
-            for(var key in properties){ 
+            for(var key in properties){
                 winston.info("KEY:",key);
                 winston.info("PROPERTIES:",properties[key]);
 

@@ -68,7 +68,7 @@ exports.valid_input = function(value, type){
 
     switch(type){
         case "email":
-            var match = email.match(/^.+@.+\..+$/);
+            var match = value.match(/^.+@.+\..+$/);
             winston.info("MATCH:",match);
             if(match){
                 return true;
