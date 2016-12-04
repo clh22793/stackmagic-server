@@ -27,6 +27,7 @@ app.use(function(req,res,next){
 	winston.info("BODY:",req.body);
 	winston.info("QUERY:",req.query);
 	winston.info('HEADERS: ',req.headers);
+	winston.info('CONNECTION: ',req.connection);
 	next();
 });
 
