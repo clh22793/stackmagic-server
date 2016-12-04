@@ -31,7 +31,6 @@ MongoClient.connect("mongodb://"+process.env.DB_USER+":"+process.env.DB_PASSWORD
 
 exports.get_api_key = function(content){
     return new Promise(function(resolve) {
-        winston.info('HEADERS: ',content.request.headers);
         if(!content.request.headers['authorization']){
             throw new exceptions.HeaderException('no authorization present.');
         }

@@ -26,6 +26,7 @@ app.use(function(req,res,next){
 	winston.info("PATH:", req.path);
 	winston.info("BODY:",req.body);
 	winston.info("QUERY:",req.query);
+	winston.info('HEADERS: ',req.headers);
 	next();
 });
 
