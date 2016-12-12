@@ -36,7 +36,8 @@ router.post('/:version_name/:plurality', function (request, response) {
 				if(content.results.length == 0){
 					throw new exceptions.ObjectException('could not find resource');
 				}else{
-					content.resource_id = content.results[0].id;
+					content.resource_id = content.results[0].id; // IS THIS STILL NEEDED????
+					content.type_resource_id = content.results[0].id;
 					content.resource = content.results[0].name.toLowerCase();
 					content.path = content.plurality;
 				}
@@ -252,6 +253,7 @@ router.put('/:version_name/:plurality/:resource_id', function (request, response
 				}else{
 					content.access_control_policy = content.results[0].access_control_policy;
 					content.retrieved_object_body = content.results[0].body;
+					content.type_resource_id = content.results[0].resource_id;
 				}
 				resolve(content);
 			});
@@ -372,7 +374,8 @@ router.post('/:version_name/:parent/:parent_id/:plurality', function (request, r
 				if(content.results.length == 0){
 					throw new exceptions.ObjectException('could not find resource');
 				}else{
-					content.resource_id = content.results[0].id;
+					content.resource_id = content.results[0].id; // IS THIS STILL NEEDED???
+					content.type_resource_id = content.results[0].id;
 					content.resource = content.results[0].name.toLowerCase();
 					content.path = content.parent+"/{"+content.parent_resource_name+"_id}/"+content.plurality;
 				}

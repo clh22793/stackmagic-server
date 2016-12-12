@@ -362,7 +362,8 @@ exports.build_api_object = function(content){
             }
         }else if(request.method.toLowerCase() == 'put'){
             body.meta._resource = schema_parts[1].toLowerCase();
-            body.meta._created = current_ISODate;
+            //body.meta._created = current_ISODate;
+            body.meta._created = content.retrieved_object_body.meta._created;
             body.meta._lastModified = current_ISODate;
             body.content = util.merge_objects(content.retrieved_object_body.content, body.content);
         }
@@ -371,7 +372,7 @@ exports.build_api_object = function(content){
                               "client_id":content.client_id, "active":true, "resource":content.resource};*/
 
         content.api_object = {"body":body, "type":schema_parts[1].toLowerCase(), "api_id":content.api_id, "version_id":content.version_id,
-                              "client_id":content.client_id, "active":true, "resource":content.resource, "resource_id":content.resource_id,
+                              "client_id":content.client_id, "active":true, "resource":content.resource, "resource_id":content.type_resource_id,
                               "access_control_policy":content.access_control_policy || {}};
 
         if(content.user_id){

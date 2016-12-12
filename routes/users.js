@@ -30,6 +30,7 @@ router.post('/:version_name/users', function (request, response) {
 					throw new exceptions.ObjectException('could not find resource');
 				}else{
 					content.resource_id = content.results[0].id;
+					content.type_resource_id = content.results[0].id;
 					content.resource = content.results[0].name.toLowerCase();
 					content.path = content.plurality;
 				}
@@ -196,9 +197,8 @@ router.put('/:version_name/users/:resource_id', function (request, response) {
 					throw new exceptions.ObjectException('retrieval error');
 				}else{
 					content.retrieved_object_body = content.results[0].body;
-
 					content.access_control_policy = content.results[0].access_control_policy;
-
+					content.type_resource_id = content.results[0].resource_id;
 				}
 				resolve(content);
 			});
