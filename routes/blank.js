@@ -60,7 +60,7 @@ router.post('/:version_name/:plurality', function (request, response) {
 		.catch(function(err){
 			console.trace();
 			console.log(err);
-			response.status(500).send({"error_code":err.code, "error_message":err.message});
+			response.status(400).send({"error_code":err.code, "error_message":err.message});
 		});
 });
 
@@ -120,7 +120,7 @@ router.get('/:version_name/:plurality', function (request, response) {
 		.catch(function(err){
 			console.trace();
 			console.log(err);
-			response.status(500).send({"error_code":err.code, "error_message":err.message});
+			response.status(400).send({"error_code":err.code, "error_message":err.message});
 		});
 });
 
@@ -189,7 +189,7 @@ router.get('/:version_name/:plurality/:resource_id', function (request, response
 		.catch(function(err){
 			console.trace();
 			console.log(err);
-			response.status(500).send({"error_code":err.code, "error_message":err.message});
+			response.status(400).send({"error_code":err.code, "error_message":err.message});
 		});
 });
 
@@ -275,7 +275,7 @@ router.put('/:version_name/:plurality/:resource_id', function (request, response
 		.catch(function(err){
 			console.trace();
 			console.log(err);
-			response.status(500).send({"error_code":err.code, "error_message":err.message});
+			response.status(400).send({"error_code":err.code, "error_message":err.message});
 		});
 });
 
@@ -329,7 +329,7 @@ router.delete('/:version_name/:plurality/:resource_id', function (request, respo
 		.catch(function(err){
 			console.trace();
 			console.log(err);
-			response.status(500).send({"error_code":err.code, "error_message":err.message});
+			response.status(400).send({"error_code":err.code, "error_message":err.message});
 		});
 });
 
@@ -405,7 +405,7 @@ router.post('/:version_name/:parent/:parent_id/:plurality', function (request, r
 		.catch(function(err){
 			console.trace();
 			console.log(err);
-			response.status(500).send({"error_code":err.code, "error_message":err.message});
+			response.status(400).send({"error_code":err.code, "error_message":err.message});
 		});
 });
 
@@ -479,7 +479,7 @@ router.get('/:version_name/:parent/:resource_id/:plurality', function (request, 
 		.catch(function(err){
 			console.trace();
 			console.log(err);
-			response.status(500).send({"error_code":err.code, "error_message":err.message});
+			response.status(400).send({"error_code":err.code, "error_message":err.message});
 		});
 });
 

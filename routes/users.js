@@ -57,7 +57,7 @@ router.post('/:version_name/users', function (request, response) {
 		.catch(function(err){
 			console.trace();
 			console.log(err);
-			response.status(500).send({"error_code":err.code, "error_message":err.message});
+			response.status(400).send({"error_code":err.code, "error_message":err.message});
 		});
 });
 
@@ -109,7 +109,7 @@ router.get('/:version_name/users', function (request, response) {
 		.catch(function(err){
 			console.trace();
 			console.log(err);
-			response.status(500).send({"error_code":err.code, "error_message":err.message});
+			response.status(400).send({"error_code":err.code, "error_message":err.message});
 		});
 });
 
@@ -163,7 +163,7 @@ router.get('/:version_name/users/:resource_id', function (request, response) {
 		.catch(function(err){
 			console.trace();
 			console.log(err);
-			response.status(500).send({"error_code":err.code, "error_message":err.message});
+			response.status(400).send({"error_code":err.code, "error_message":err.message});
 		});
 });
 
@@ -221,7 +221,7 @@ router.put('/:version_name/users/:resource_id', function (request, response) {
 		.catch(function(err){
 			console.trace();
 			console.log(err);
-			response.status(500).send({"error_code":err.code, "error_message":err.message});
+			response.status(400).send({"error_code":err.code, "error_message":err.message});
 		});
 });
 
@@ -249,7 +249,7 @@ router.delete('/:version_name/users/:resource_id', function (request, response) 
 		.catch(function(err){
 			console.trace();
 			console.log(err);
-			response.status(500).send({"error_code":err.code, "error_message":err.message});
+			response.status(400).send({"error_code":err.code, "error_message":err.message});
 		});
 });
 

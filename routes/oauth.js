@@ -68,7 +68,7 @@ router.post('/:version_name/oauth2/token', function (request, response) {
 		.catch(function(err){
 			console.trace();
 			console.log(err);
-			response.send({"error_code":err.code, "error_message":err.message});
+			response.status(400).send({"error_code":err.code, "error_message":err.message});
 		});
 });
 
