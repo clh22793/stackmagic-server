@@ -314,7 +314,9 @@ router.delete('/:version_name/:plurality/:resource_id', function (request, respo
 		.then(magicstack.get_api_objects)
 		.then(function(content){ // confirm write permissions on this resource
 		    return new Promise(function(resolve){
-		        if(!util.user_has_permissions(content.results[0].access_control_policy, content.user_id, 'write')){
+		        if(content.results.length == 0){
+		        	throw new exceptions.ObjectException('could not get object');
+		        }else if(!util.user_has_permissions(content.results[0].access_control_policy, content.user_id, 'write')){
 		            throw new exceptions.ObjectException('permissions denied');
 		        }
 
