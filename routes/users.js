@@ -71,6 +71,16 @@ router.get('/:version_name/users', function (request, response) {
 	content.path = 'users';
 
 	magicstack.get_api_key(content)
+		.then(function(content){
+			return new Promise(function(resolve){
+				// do more stuff
+				if(content.basic_key_access != 'full'){
+					throw new exceptions.HeaderException('cannot perform operation with limited token');
+				}
+
+				resolve(content);
+			});
+		})
 		.then(magicstack.validate_api_key)
 		.then(magicstack.get_deployment)
 		.then(magicstack.validate_swagger_spec)
@@ -127,6 +137,16 @@ router.get('/:version_name/users/:resource_id', function (request, response) {
 	content.resource_id = request.params.resource_id;
 
 	magicstack.get_api_key(content)
+		.then(function(content){
+			return new Promise(function(resolve){
+				// do more stuff
+				if(content.basic_key_access != 'full'){
+					throw new exceptions.HeaderException('cannot perform operation with limited token');
+				}
+
+				resolve(content);
+			});
+		})
 		.then(magicstack.validate_api_key)
 		.then(magicstack.get_deployment)
 		.then(magicstack.validate_swagger_spec)
@@ -180,6 +200,16 @@ router.put('/:version_name/users/:resource_id', function (request, response) {
 	content.resource_id = request.params.resource_id;
 
 	magicstack.get_api_key(content)
+		.then(function(content){
+			return new Promise(function(resolve){
+				// do more stuff
+				if(content.basic_key_access != 'full'){
+					throw new exceptions.HeaderException('cannot perform operation with limited token');
+				}
+
+				resolve(content);
+			});
+		})
 		.then(magicstack.validate_api_key)
 		.then(magicstack.get_deployment)
 		.then(magicstack.validate_swagger_spec)
@@ -238,6 +268,16 @@ router.delete('/:version_name/users/:resource_id', function (request, response) 
 	content.resource_id = request.params.resource_id;
 
 	magicstack.get_api_key(content)
+		.then(function(content){
+			return new Promise(function(resolve){
+				// do more stuff
+				if(content.basic_key_access != 'full'){
+					throw new exceptions.HeaderException('cannot perform operation with limited token');
+				}
+
+				resolve(content);
+			});
+		})
 		.then(magicstack.validate_api_key)
 		.then(magicstack.get_deployment)
 		.then(magicstack.validate_swagger_spec)

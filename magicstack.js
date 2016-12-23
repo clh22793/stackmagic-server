@@ -51,6 +51,12 @@ exports.get_api_key = function(content){
             winston.warn(err);
             winston.info('get_api_key: docs - ', docs);
             content.api_keys = docs;
+
+            if(authorization_parts[0].toLowerCase() == 'basic'){ // perform for basic auth requests
+                // determine access level of this api key
+                content.basic_key_access = docs[0].access; // full || limited (can only post /users and post /oauth2/token)
+            }
+
             resolve(content);
         });
     });
