@@ -74,7 +74,7 @@ router.get('/:version_name/users', function (request, response) {
 		.then(function(content){
 			return new Promise(function(resolve){
 				// do more stuff
-				if(content.basic_key_access != 'full'){
+				if(content.api_keys[0] && content.basic_key_access != 'full'){
 					throw new exceptions.HeaderException('cannot perform operation with limited token');
 				}
 
@@ -140,7 +140,7 @@ router.get('/:version_name/users/:resource_id', function (request, response) {
 		.then(function(content){
 			return new Promise(function(resolve){
 				// do more stuff
-				if(content.basic_key_access != 'full'){
+				if(content.api_keys[0] && content.basic_key_access != 'full'){
 					throw new exceptions.HeaderException('cannot perform operation with limited token');
 				}
 
@@ -203,7 +203,7 @@ router.put('/:version_name/users/:resource_id', function (request, response) {
 		.then(function(content){
 			return new Promise(function(resolve){
 				// do more stuff
-				if(content.basic_key_access != 'full'){
+				if(content.api_keys[0] && content.basic_key_access != 'full'){
 					throw new exceptions.HeaderException('cannot perform operation with limited token');
 				}
 
@@ -271,7 +271,7 @@ router.delete('/:version_name/users/:resource_id', function (request, response) 
 		.then(function(content){
 			return new Promise(function(resolve){
 				// do more stuff
-				if(content.basic_key_access != 'full'){
+				if(content.api_keys[0] && content.basic_key_access != 'full'){
 					throw new exceptions.HeaderException('cannot perform operation with limited token');
 				}
 
