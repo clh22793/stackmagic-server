@@ -412,6 +412,8 @@ router.post('/:version_name/:parent/:parent_id/:plurality', function (request, r
 });
 
 router.get('/:version_name/:parent/:resource_id/:plurality', function (request, response) {
+  	var start_time = Date.now();
+  	
   	var content = {};
 	content.version_name = request.params.version_name;
 	content.request = request;
