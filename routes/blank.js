@@ -413,7 +413,7 @@ router.post('/:version_name/:parent/:parent_id/:plurality', function (request, r
 
 router.get('/:version_name/:parent/:resource_id/:plurality', function (request, response) {
   	var start_time = Date.now();
-  	
+
   	var content = {};
 	content.version_name = request.params.version_name;
 	content.request = request;
@@ -455,7 +455,8 @@ router.get('/:version_name/:parent/:resource_id/:plurality', function (request, 
 		.then(function(content){
 			return new Promise(function(resolve) {
 				content.query = {"resource":content.resource, "active":true, "client_id":content.client_id, "access_control_policy.access_control_list.id":content.user_id, "access_control_policy.access_control_list.type":"user", "access_control_policy.access_control_list.permissions":"read"};
-				//console.log(content.query);
+				content.query["_"+content.parent_resource_name+"_id"] = content.resource_id;
+				console.log(content.query);
 				resolve(content);
 			});
 		})
