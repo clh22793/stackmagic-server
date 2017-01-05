@@ -262,6 +262,8 @@ exports.get_api_objects = function(content){
             winston.info(err);
 
             content.results = results;
+
+            console.log(results);
             resolve(content);
         });
     });
