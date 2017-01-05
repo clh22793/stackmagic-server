@@ -232,7 +232,7 @@ exports.get_deployment = function(content){
 exports.get_resource = function(content){
     //winston.info({"plurality":content.plurality, "version_id":content.version_id, "active":true});
     return new Promise(function(resolve) {
-        winston.info('GET_RESOURCE======');
+        winston.info('GET_RESOURCE========================!!!');
         winston.info({"plurality":content.plurality, "version_id":content.version_id, "active":true});
 
         var cursor =state.db.collection('resources').find({"plurality":content.plurality, "version_id":content.version_id, "active":true}).toArray(function(err, results){
@@ -257,9 +257,10 @@ exports.get_parent_resource = function(content){
 }
 
 exports.get_api_objects = function(content){
-    return new Promise(function(resolve) {
-        winston.info("QUERY:",content.query);
+    winston.info("get_api_objects:",content.query);
+    winston.info(content.query);
 
+    return new Promise(function(resolve) {
         var cursor =state.db.collection('api_objects').find(content.query).toArray(function(err, results){
             winston.info(err);
 
