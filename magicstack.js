@@ -258,12 +258,12 @@ exports.get_parent_resource = function(content){
 
 exports.get_api_objects = function(content){
     return new Promise(function(resolve) {
+        winston.info("QUERY:",content.query);
+
         var cursor =state.db.collection('api_objects').find(content.query).toArray(function(err, results){
             winston.info(err);
 
             content.results = results;
-
-            console.log(results);
             resolve(content);
         });
     });

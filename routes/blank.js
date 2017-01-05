@@ -1,6 +1,7 @@
 // external requires
 var express = require('express');
 var router = express.Router();
+const winston = require('winston');
 
 // internal requires
 var magicstack = require('../magicstack.js');
@@ -456,8 +457,9 @@ router.get('/:version_name/:parent/:resource_id/:plurality', function (request, 
 			return new Promise(function(resolve) {
 				content.query = {"resource":content.resource, "active":true, "client_id":content.client_id, "access_control_policy.access_control_list.id":content.user_id, "access_control_policy.access_control_list.type":"user", "access_control_policy.access_control_list.permissions":"read"};
 				content.query["_"+content.parent_resource_name+"_id"] = content.resource_id;
-				console.log('get collection of child resources');
-				console.log(content.query);
+
+				winston.info("get collection of child resources:",content.query);
+
 				resolve(content);
 			});
 		})
