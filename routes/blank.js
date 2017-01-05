@@ -456,7 +456,7 @@ router.get('/:version_name/:parent/:resource_id/:plurality', function (request, 
 		.then(function(content){
 			return new Promise(function(resolve) {
 				content.query = {"resource":content.resource, "active":true, "client_id":content.client_id, "access_control_policy.access_control_list.id":content.user_id, "access_control_policy.access_control_list.type":"user", "access_control_policy.access_control_list.permissions":"read"};
-				content.query["_"+content.parent_resource_name+"_id"] = content.resource_id;
+				content.query["body.content._"+content.parent_resource_name+"_id"] = content.resource_id;
 
 				winston.info("get collection of child resources:",content.query);
 
