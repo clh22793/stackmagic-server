@@ -100,16 +100,20 @@ router.get('/:version_name/:plurality', function (request, response) {
 		.then(magicstack.get_api_objects)
 		.then(function(content){
 			return new Promise(function(resolve) {
-				var payload = [];
+				var payload = {};
+				payload.collection = [];
+
+				//var payload = [];
 				for(var i=0; i < content.results.length; i++){
-					payload.push(content.results[i].body);
+					payload.collection.push(content.results[i].body);
 				};
 
 				content.payload = payload;
+
 				// delete passwords from content.payload
-				for(var i=0; i < content.payload.length; i++){
-					delete content.payload[i].password;
-				}
+				//for(var i=0; i < content.payload.length; i++){
+				//	delete content.payload[i].password;
+				//}
 
 				resolve(content);
 			});
@@ -466,16 +470,19 @@ router.get('/:version_name/:parent/:resource_id/:plurality', function (request, 
 		.then(magicstack.get_api_objects)
 		.then(function(content){
 			return new Promise(function(resolve) {
-				var payload = [];
+				var payload = {};
+				payload.collection = [];
+
+				//var payload = [];
 				for(var i=0; i < content.results.length; i++){
-					payload.push(content.results[i].body);
+					payload.collection.push(content.results[i].body);
 				};
 
 				content.payload = payload;
 				// delete passwords from content.payload
-				for(var i=0; i < content.payload.length; i++){
-					delete content.payload[i].password;
-				}
+				//for(var i=0; i < content.payload.length; i++){
+				//	delete content.payload[i].password;
+				//}
 
 				resolve(content);
 			});
