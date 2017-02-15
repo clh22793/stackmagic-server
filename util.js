@@ -55,7 +55,8 @@ exports.user_has_permissions = function(access_control_policy, user_id, permissi
 
 exports.merge_objects = function(obj1,obj2){
   for(property in obj1){
-    if(!obj2[property]){
+    //if(!obj2[property]){
+    if(!(property in obj2)){
       obj2[property] = obj1[property];
     }
   }
